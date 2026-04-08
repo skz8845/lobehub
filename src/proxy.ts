@@ -42,6 +42,7 @@ export const config = {
     '/oauth(.*)',
     '/oidc(.*)',
     '/market-auth-callback(.*)',
+    '/sso(.*)',
   ],
 };
 

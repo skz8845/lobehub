@@ -1,8 +1,25 @@
 import { type SSOProvider } from '@lobechat/types';
 
+import { SSO_APP_TOKEN_KEY, SSO_USER_INFO_KEY, SSO_USER_TOKEN_KEY } from '@/libs/sso';
+import type { SSOMenu } from '@/libs/sso/types';
 import { type StoreSetter } from '@/store/types';
 
 import { type UserStore } from '../../store';
+
+// Cookie helper function
+const deleteCookie = (name: string) => {
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+};
+
+export interface SSOUserSession {
+  email?: string;
+  fullName?: string;
+  id: string;
+  menus?: SSOMenu[];
+  permissions?: string[];
+  phone?: string;
+  roles?: string[];
+}
 
 interface AuthProvidersData {
   hasPasswordAccount: boolean;
@@ -59,38 +76,92 @@ export class UserAuthActionImpl {
     }
   };
 
-  logout = async (): Promise<void> => {
-    // Clear the OIDC Provider session for the current browser *before*
-    // destroying the better-auth session. This prevents a stale OIDC session
-    // from silently issuing tokens for the old account after the user signs
-    // in as someone else.
-    try {
-      await fetch('/oidc/clear-session', { method: 'POST' });
-    } catch {
-      // Best-effort: don't block sign-out if the cleanup request fails
-    }
-
-    const { signOut } = await import('@/libs/better-auth/auth-client');
-    await signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          // Use window.location.href to trigger a full page reload
-          // This ensures all client-side state (React, Zustand, cache) is cleared
-          window.location.href = '/signin';
-        },
+  login = async (session: SSOUserSession): Promise<void> => {
+    this.#set({
+      isSignedIn: true,
+      isLoaded: true,
+      user: {
+        id: session.id,
+        fullName: session.fullName,
+        email: session.email,
       },
+      permissions: session.permissions,
+      roles: session.roles,
+      menus: session.menus,
     });
   };
 
-  openLogin = async (): Promise<void> => {
-    // Skip if already on a login page (/signin, /signup)
-    const pathname = location.pathname;
-    if (pathname.startsWith('/signin') || pathname.startsWith('/signup')) {
-      return;
+  logout = async (): Promise<void> => {
+    try {
+      await fetch('/api/sso/logout', { method: 'POST' });
+    } catch (error) {
+      console.error('Logout error:', error);
     }
 
+    // Clear SSO tokens from localStorage
+    localStorage.removeItem(SSO_USER_TOKEN_KEY);
+    localStorage.removeItem(SSO_APP_TOKEN_KEY);
+    localStorage.removeItem(SSO_USER_INFO_KEY);
+
+    // Clear SSO tokens from cookie
+    deleteCookie(SSO_USER_TOKEN_KEY);
+    deleteCookie(SSO_APP_TOKEN_KEY);
+
+    // Clear state and redirect
+    this.#set({
+      isSignedIn: false,
+      isLoaded: true,
+      user: undefined,
+      permissions: undefined,
+      roles: undefined,
+      menus: undefined,
+    });
+
+    // Redirect to external SSO page
+    window.location.href = process.env.NEXT_PUBLIC_SSO_LOGIN_URL || '';
+  };
+
+  openLogin = async (): Promise<void> => {
     const currentUrl = location.toString();
-    window.location.href = `/signin?callbackUrl=${encodeURIComponent(currentUrl)}`;
+    const ssoUrl = new URL(process.env.NEXT_PUBLIC_SSO_LOGIN_URL || '');
+    ssoUrl.searchParams.set('callbackUrl', currentUrl);
+    window.location.href = ssoUrl.toString();
+  };
+
+  refreshSession = async (): Promise<void> => {
+    try {
+      const response = await fetch('/api/sso/user-info');
+      if (response.ok) {
+        const data = await response.json();
+        this.#set({
+          isSignedIn: true,
+          isLoaded: true,
+          user: {
+            id: data.user.id,
+            fullName: data.user.name,
+            email: data.user.email,
+          },
+          permissions: data.permissions,
+          roles: data.roles,
+          menus: data.menus,
+        });
+      } else {
+        this.#set({
+          isSignedIn: false,
+          isLoaded: true,
+          user: undefined,
+          permissions: undefined,
+          roles: undefined,
+          menus: undefined,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to refresh session:', error);
+      this.#set({
+        isSignedIn: false,
+        isLoaded: true,
+      });
+    }
   };
 
   refreshAuthProviders = async (): Promise<void> => {

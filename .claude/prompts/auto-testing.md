@@ -162,15 +162,11 @@ describe('ModuleName', () => {
 ### 5. Create Pull Request
 
 - Create a new branch: `automatic/add-tests-[module-name]-[date]`
-
 - Commit changes with message format:
-
   ```
   ✅ test: add unit tests for [module-name]
   ```
-
 - Push the branch
-
 - Create a PR with:
 
   - Title: `✅ test: add unit tests for [module-name]`
@@ -202,7 +198,6 @@ describe('ModuleName', () => {
   - Test approach: [brief description]
 
   ---
-
   🤖 Generated with [Claude Code](https://claude.com/claude-code)
   ```
 

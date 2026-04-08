@@ -4,16 +4,13 @@ import { NextResponse } from 'next/server';
 import { UAParser } from 'ua-parser-js';
 import urlJoin from 'url-join';
 
-import { auth } from '@/auth';
 import { LOBE_LOCALE_COOKIE } from '@/const/locale';
 import { appEnv } from '@/envs/app';
-import { authEnv } from '@/envs/auth';
 import { type Locales } from '@/locales/resources';
 import { parseBrowserLanguage } from '@/utils/locale';
 import { RouteVariants } from '@/utils/server/routeVariants';
 
 import { nextjsOnlyRoutes } from '../nextjsOnlyRoutes';
-import { createRouteMatcher } from './createRouteMatcher';
 
 // Create debug logger instances
 const logDefault = debug('middleware:default');
@@ -166,84 +163,5 @@ export function defineConfig() {
     return rewrite;
   };
 
-  const isPublicRoute = createRouteMatcher([
-    // backend api
-    '/api/v1(.*)', // OpenAPI routes should use OpenAPI auth (API Key/OIDC), not BetterAuth session
-    '/api/auth(.*)',
-    '/api/webhooks(.*)',
-    '/api/workflows(.*)',
-    '/api/agent(.*)',
-    '/api/dev(.*)',
-    '/webapi(.*)',
-    '/trpc(.*)',
-    // version
-    '/api/version',
-    '/api/desktop/(.*)',
-    // better auth
-    '/signin',
-    '/signup',
-    '/auth-error',
-    '/verify-email',
-    '/reset-password',
-    // oauth
-    // Make only the consent view public (GET page), not other oauth paths
-    '/oauth/consent/(.*)',
-    '/oidc/handoff',
-    '/oidc/device/auth',
-    '/oidc/token',
-    // market
-    '/market-auth-callback',
-    // public share pages
-    '/share(.*)',
-  ]);
-
-  const betterAuthMiddleware = async (req: NextRequest) => {
-    logBetterAuth('BetterAuth middleware processing request: %s %s', req.method, req.url);
-
-    const response = defaultMiddleware(req);
-
-    // when enable auth protection, only public route is not protected, others are all protected
-    const isProtected = !isPublicRoute(req);
-
-    logBetterAuth('Route protection status: %s, %s', req.url, isProtected ? 'protected' : 'public');
-
-    // Skip session lookup for public routes to reduce latency
-    if (!isProtected) return response;
-
-    // Get full session with user data (Next.js 15.2.0+ feature)
-    const session = await auth.api.getSession({
-      headers: req.headers,
-    });
-
-    const isLoggedIn = !!session?.user;
-
-    logBetterAuth('BetterAuth session status: %O', {
-      isLoggedIn,
-      userId: session?.user?.id,
-    });
-
-    if (!isLoggedIn) {
-      // If request a protected route, redirect to sign-in page
-      if (isProtected) {
-        logBetterAuth('Request a protected route, redirecting to sign-in page');
-
-        const callbackUrl = `${appEnv.APP_URL}${req.nextUrl.pathname}${req.nextUrl.search}`;
-        const signInUrl = new URL('/signin', appEnv.APP_URL);
-        signInUrl.searchParams.set('callbackUrl', callbackUrl);
-        const hl = req.nextUrl.searchParams.get('hl');
-        if (hl) {
-          signInUrl.searchParams.set('hl', hl);
-          logBetterAuth('Preserving locale to sign-in: hl=%s', hl);
-        }
-        return Response.redirect(signInUrl);
-      }
-      logBetterAuth('Request a free route but not login, allow visit without auth header');
-    }
-
-    return response;
-  };
-
-  logDefault('Middleware configuration: %O', { enableOIDC: authEnv.ENABLE_OIDC });
-
-  return { middleware: betterAuthMiddleware };
+  return { middleware: defaultMiddleware };
 }

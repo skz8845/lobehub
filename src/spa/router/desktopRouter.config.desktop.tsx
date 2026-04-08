@@ -71,6 +71,7 @@ import SettingsLayout from '@/routes/(main)/settings/_layout';
 import { ProviderDetailPage, ProviderLayout } from '@/routes/(main)/settings/provider';
 import ShareTopicPage from '@/routes/share/t/[id]';
 import ShareTopicLayout from '@/routes/share/t/[id]/_layout';
+import SSOPage from '@/routes/sso';
 import { ErrorBoundary, redirectElement } from '@/utils/router';
 
 // Desktop router configuration — all sync imports for Electron local build
@@ -455,6 +456,13 @@ export const desktopRoutes: RouteObject[] = [
     path: '/share/t',
   },
 ];
+
+// SSO route (outside main layout)
+desktopRoutes.push({
+  element: <SSOPage />,
+  errorElement: <ErrorBoundary resetPath="/" />,
+  path: '/sso',
+});
 
 // Desktop onboarding route (Electron only in .desktop.tsx)
 desktopRoutes.push({

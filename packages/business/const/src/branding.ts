@@ -4,10 +4,10 @@
 
 export const LOBE_CHAT_CLOUD = 'LobeHub Cloud';
 
-export const BRANDING_NAME = 'LobeHub';
+export const BRANDING_NAME = '智脑';
 export const BRANDING_LOGO_URL = '';
 
-export const ORG_NAME = 'LobeHub';
+export const ORG_NAME = 'YD';
 
 export const BRANDING_URL = {
   help: undefined,

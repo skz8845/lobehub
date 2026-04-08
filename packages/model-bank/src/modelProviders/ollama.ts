@@ -15,6 +15,7 @@ const Ollama: ModelProviderCard = {
     sdkType: 'ollama',
     showApiKey: false,
     showModelFetcher: true,
+    disableBrowserRequest: true, // CORS error
   },
   showApiKey: false,
   url: 'https://ollama.com',

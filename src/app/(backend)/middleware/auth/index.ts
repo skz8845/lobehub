@@ -4,15 +4,16 @@ import { context as otContext } from '@lobechat/observability-otel/api';
 import { type ClientSecretPayload } from '@lobechat/types';
 import { ChatErrorType } from '@lobechat/types';
 
-import { auth } from '@/auth';
 import { getServerDB } from '@/database/core/db-adaptor';
 import { type LobeChatDatabase } from '@/database/type';
-import { LOBE_CHAT_OIDC_AUTH_HEADER } from '@/envs/auth';
 import { extractTraceContext, injectActiveTraceHeaders } from '@/libs/observability/traceparent';
-import { validateOIDCJWT } from '@/libs/oidc-provider/jwt';
+import { validateSSOToken } from '@/libs/sso';
 import { createErrorResponse } from '@/utils/errorResponse';
 
 type RequestOptions = { params: Promise<{ provider?: string }> };
+
+const RZZX_USER_TOKEN_HEADER = 'RZZX-USERTOKEN';
+const RZZX_APP_TOKEN_HEADER = 'RZZX-APPTOKEN';
 
 export type RequestHandler = (
   req: Request,
@@ -35,36 +36,48 @@ export const checkAuth =
 
     // we have a special header to debug the api endpoint in development mode
     const isDebugApi = req.headers.get('lobe-auth-dev-backend-api') === '1';
-    const isMockUser = process.env.ENABLE_MOCK_DEV_USER === '1';
-    if (process.env.NODE_ENV === 'development' && (isDebugApi || isMockUser)) {
-      const mockUserId = process.env.MOCK_DEV_USER_ID || 'DEV_USER';
+    if (process.env.NODE_ENV === 'development' && isDebugApi) {
       return handler(clonedReq, {
         ...options,
-        jwtPayload: { userId: mockUserId },
+        jwtPayload: { userId: 'DEV_USER' },
         serverDB,
-        userId: mockUserId,
+        userId: 'DEV_USER',
       });
     }
 
-    let userId: string;
+    let jwtPayload: ClientSecretPayload;
 
     try {
-      // OIDC authentication (CLI)
-      const oidcAuthorization = req.headers.get(LOBE_CHAT_OIDC_AUTH_HEADER);
-      if (oidcAuthorization) {
-        const oidc = await validateOIDCJWT(oidcAuthorization);
-        userId = oidc.userId;
-      } else {
-        // Better Auth session authentication (web)
-        const session = await auth.api.getSession({
-          headers: req.headers,
-        });
+      let ssoAuthorized = false;
+      let ssoUserId: string | undefined;
 
-        if (!session?.user?.id) {
-          throw AgentRuntimeError.createError(ChatErrorType.Unauthorized);
+      // First try RZZX headers
+      const rzzxUserToken = req.headers.get(RZZX_USER_TOKEN_HEADER);
+      const rzzxAppToken = req.headers.get(RZZX_APP_TOKEN_HEADER);
+
+      if (rzzxUserToken && rzzxAppToken) {
+        try {
+          const response = await validateSSOToken({
+            userToken: rzzxUserToken,
+            appToken: rzzxAppToken,
+          });
+          if (response.code === '0' || response.code === '200') {
+            ssoAuthorized = true;
+            ssoUserId = String(response.data.userInfo.userId);
+          }
+        } catch (e) {
+          console.error('RZZX header validation error:', e);
         }
+      }
 
-        userId = session.user.id;
+      if (!ssoAuthorized) {
+        throw AgentRuntimeError.createError(ChatErrorType.Unauthorized);
+      }
+
+      if (ssoAuthorized && ssoUserId) {
+        jwtPayload = { userId: ssoUserId };
+      } else {
+        throw AgentRuntimeError.createError(ChatErrorType.Unauthorized);
       }
     } catch (e) {
       const params = await options.params;
@@ -93,7 +106,7 @@ export const checkAuth =
       return createErrorResponse(errorType, { error, ...res, provider: params?.provider });
     }
 
-    const jwtPayload: ClientSecretPayload = { userId };
+    const userId = jwtPayload.userId || '';
 
     const extractedContext = extractTraceContext(req.headers);
 
@@ -102,11 +115,8 @@ export const checkAuth =
     );
 
     // Only inject trace headers when the handler returns a Response
-    // NOTICE: this is related to src/app/(backend)/webapi/chat/[provider]/route.test.ts
     if (!(res instanceof Response)) {
-      console.warn(
-        'Response is not an instance of Response, skipping trace header injection. Possibly bug or mocked response in tests, please check and make sure this is intended behavior.',
-      );
+      console.warn('Response is not an instance of Response, skipping trace header injection.');
       return res;
     }
 

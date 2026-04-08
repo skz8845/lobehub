@@ -15,11 +15,9 @@ import { safeParseJSON } from '@lobechat/utils';
 import { ModelProvider } from 'model-bank';
 
 import { getBusinessModelRuntimeHooks } from '@/business/server/model-runtime';
-import { AiProviderModel } from '@/database/models/aiProvider';
 import { type LobeChatDatabase } from '@/database/type';
 import { getLLMConfig } from '@/envs/llm';
 
-import { KeyVaultsGateKeeper } from '../KeyVaultsEncrypt';
 import apiKeyManager from './apiKeyManager';
 
 export * from './trace';
@@ -189,8 +187,9 @@ const getParamsFromPayload = (provider: string, payload: ClientSecretPayload) =>
 
     case ModelProvider.Ollama: {
       const baseURL = payload?.baseURL || process.env.OLLAMA_PROXY_URL;
+      const apiKey = payload?.baseURL || process.env.OLLAMA_API_KEY;
 
-      return { baseURL };
+      return { baseURL, apiKey };
     }
 
     case ModelProvider.Azure: {
@@ -403,22 +402,23 @@ export const initModelRuntimeFromDB = async (
   provider: string,
 ): Promise<ModelRuntime> => {
   // 1. Get user's provider configuration from database
-  const aiProviderModel = new AiProviderModel(db, userId);
+  // const aiProviderModel = new AiProviderModel(db, userId);
 
   // Use getAiProviderById with KeyVaultsGateKeeper.getUserKeyVaults as decryptor
-  const providerConfig = await aiProviderModel.getAiProviderById(
-    provider,
-    KeyVaultsGateKeeper.getUserKeyVaults,
-  );
+  // const providerConfig = await aiProviderModel.getAiProviderById(
+  //   provider,
+  //   KeyVaultsGateKeeper.getUserKeyVaults,
+  // );
 
   // 2. Resolve the runtime provider for custom providers
   // For custom providers, use sdkType from settings (defaults to 'openai')
-  const sdkType = providerConfig?.settings?.sdkType;
+  const sdkType = undefined;
   const runtimeProvider = resolveRuntimeProvider(provider, sdkType);
 
   // 3. Build ClientSecretPayload from keyVaults based on runtimeProvider
   // This ensures provider-specific fields (e.g., cloudflareBaseURLOrAccountID) are included
-  const keyVaults = (providerConfig?.keyVaults || {}) as ProviderKeyVaults;
+  // const keyVaults = (providerConfig?.keyVaults || {}) as ProviderKeyVaults;
+  const keyVaults = {} as ProviderKeyVaults;
   const payload = buildPayloadFromKeyVaults(keyVaults, runtimeProvider);
 
   // 4. Get business hooks (billing in cloud, undefined in OSS)

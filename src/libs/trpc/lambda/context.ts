@@ -4,17 +4,16 @@ import { parse } from 'cookie';
 import debug from 'debug';
 import { type NextRequest } from 'next/server';
 
-import { auth } from '@/auth';
 import { getServerDB } from '@/database/core/db-adaptor';
 import { ApiKeyModel } from '@/database/models/apiKey';
-import { authEnv, LOBE_CHAT_OIDC_AUTH_HEADER } from '@/envs/auth';
 import { extractTraceContext } from '@/libs/observability/traceparent';
-import { validateOIDCJWT } from '@/libs/oidc-provider/jwt';
+import { validateSSOToken } from '@/libs/sso';
 import { isApiKeyExpired, validateApiKeyFormat } from '@/utils/apiKey';
 
 // Create context logger namespace
 const log = debug('lobe-trpc:lambda:context');
-const LOBE_CHAT_API_KEY_HEADER = 'X-API-Key';
+const RZZX_USER_TOKEN_HEADER = 'RZZX-USERTOKEN';
+const RZZX_APP_TOKEN_HEADER = 'RZZX-APPTOKEN';
 
 const extractClientIp = (request: NextRequest): string | undefined => {
   const forwardedFor = request.headers.get('x-forwarded-for');
@@ -139,93 +138,27 @@ export const createLambdaContext = async (request: NextRequest): Promise<LambdaC
     userAgent,
   };
 
-  const apiKeyToken = request.headers.get(LOBE_CHAT_API_KEY_HEADER)?.trim();
-  log('X-API-Key header: %s', apiKeyToken ? 'exists' : 'not found');
-
-  if (apiKeyToken) {
-    const apiKeyUserId = await validateApiKeyUserId(apiKeyToken);
-
-    if (!apiKeyUserId) {
-      log('API key authentication failed; rejecting request without fallback auth');
-
-      return createContextInner({
-        ...commonContext,
-        traceContext,
-        userId: null,
-      });
-    }
-
-    log('API key authentication successful, userId: %s', apiKeyUserId);
-
-    return createContextInner({
-      ...commonContext,
-      traceContext,
-      userId: apiKeyUserId,
-    });
-  }
-
-  let userId;
-  let oidcAuth;
-
-  // Prioritize checking for OIDC authentication (both standard Authorization and custom Oidc-Auth headers)
-  if (authEnv.ENABLE_OIDC) {
-    log('OIDC enabled, attempting OIDC authentication');
-    const oidcAuthToken = request.headers.get(LOBE_CHAT_OIDC_AUTH_HEADER);
-    log('Oidc-Auth header: %s', oidcAuthToken ? 'exists' : 'not found');
-
-    try {
-      if (oidcAuthToken) {
-        // Use direct JWT validation instead of database lookup
-        const tokenInfo = await validateOIDCJWT(oidcAuthToken);
-
-        oidcAuth = {
-          payload: tokenInfo.tokenData,
-          ...tokenInfo.tokenData, // Spread payload into oidcAuth
-          sub: tokenInfo.userId, // Use tokenData as payload
-        };
-        userId = tokenInfo.userId;
-        log('OIDC authentication successful, userId: %s', userId);
-
-        // If OIDC authentication is successful, return context immediately
-        log('OIDC authentication successful, creating context and returning');
-        return createContextInner({
-          oidcAuth,
-          ...commonContext,
-          traceContext,
-          userId,
-        });
-      }
-    } catch (error) {
-      // If OIDC authentication fails, log error and continue with other authentication methods
-      if (oidcAuthToken) {
-        log('OIDC authentication failed, error: %O', error);
-        console.error('OIDC authentication failed, trying other methods:', error);
-      }
-    }
-  }
-
-  // If OIDC is not enabled or validation fails, try Better Auth authentication
-  log('Attempting Better Auth authentication');
+  // Check SSO session
+  log('Attempting SSO session authentication');
+  let userId = null;
   try {
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
+    // First try to authenticate via RZZX headers
+    const userToken = request.headers.get(RZZX_USER_TOKEN_HEADER);
+    const appToken = request.headers.get(RZZX_APP_TOKEN_HEADER);
 
-    if (session && session?.user?.id) {
-      userId = session.user.id;
-      log('Better Auth authentication successful, userId: %s', userId);
-    } else {
-      log('Better Auth authentication failed, no valid session');
+    if (userToken && appToken) {
+      log('Found RZZX headers, validating tokens');
+      const response = await validateSSOToken({ userToken, appToken });
+      if (response.code === '0' || response.code === '200') {
+        userId = String(response.data.userInfo.userId);
+        log('RZZX header authentication successful, userId: %s', userId);
+      } else {
+        log('RZZX header validation failed: %s', response.msg);
+      }
     }
-
-    return createContextInner({
-      ...commonContext,
-      traceContext,
-      userId,
-    });
   } catch (e) {
-    log('Better Auth authentication error: %O', e);
-    console.error('better auth err', e);
+    log('SSO session authentication error: %O', e);
+    console.error('SSO session err', e);
   }
 
   // Final return, userId may be undefined

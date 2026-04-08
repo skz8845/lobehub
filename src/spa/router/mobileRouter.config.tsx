@@ -297,6 +297,12 @@ export const mobileRoutes: RouteObject[] = [
     errorElement: <ErrorBoundary />,
     path: '/',
   },
+  // SSO route (outside main layout)
+  {
+    element: dynamicElement(() => import('@/routes/sso'), 'Mobile > SSO'),
+    errorElement: <ErrorBoundary resetPath="/" />,
+    path: '/sso',
+  },
   // Onboarding route (outside main layout)
   {
     element: dynamicElement(() => import('@/routes/onboarding'), 'Mobile > Onboarding'),

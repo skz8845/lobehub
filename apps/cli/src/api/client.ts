@@ -56,11 +56,16 @@ async function getAuthAndServer() {
 export async function getTrpcClient(): Promise<TrpcClient> {
   if (_client) return _client;
 
-  const { headers, serverUrl } = await getAuthAndServer();
+  const { serverUrl } = await getAuthAndServer();
   _client = createTRPCClient<LambdaRouter>({
     links: [
       httpLink({
-        headers,
+        headers: async () => {
+          // dynamic import to avoid circular dependency
+          const { createHeaderWithAuth } = await import('@/services/_auth');
+
+          return createHeaderWithAuth();
+        },
         transformer: superjson,
         url: `${serverUrl}/trpc/lambda`,
       }),
@@ -73,11 +78,16 @@ export async function getTrpcClient(): Promise<TrpcClient> {
 export async function getToolsTrpcClient(): Promise<ToolsTrpcClient> {
   if (_toolsClient) return _toolsClient;
 
-  const { headers, serverUrl } = await getAuthAndServer();
+  const { serverUrl } = await getAuthAndServer();
   _toolsClient = createTRPCClient<ToolsRouter>({
     links: [
       httpLink({
-        headers,
+        headers: async () => {
+          // dynamic import to avoid circular dependency
+          const { createHeaderWithAuth } = await import('@/services/_auth');
+
+          return createHeaderWithAuth();
+        },
         transformer: superjson,
         url: `${serverUrl}/trpc/tools`,
       }),

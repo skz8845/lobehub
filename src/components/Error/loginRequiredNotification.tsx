@@ -1,19 +1,14 @@
-import { FluentEmoji } from '@lobehub/ui';
-import { t } from 'i18next';
-
-import { notification } from '@/components/AntdStaticMethods';
-
-import RedirectLogin from './RedirectLogin';
-
 export const loginRequired = {
-  redirect: ({ timeout = 2000 }: { timeout?: number } = {}) => {
-    notification.error({
-      description: <RedirectLogin timeout={timeout} />,
-      duration: timeout / 1000,
-      icon: <FluentEmoji emoji={'🫡'} size={24} />,
-      message: t('loginRequired.title', { ns: 'error' }),
-      showProgress: true,
-      type: 'warning',
-    });
+  // eslint-disable-next-line no-empty-pattern
+  redirect: ({}: { timeout?: number } = {}) => {
+    const currentUrl = window.location.href;
+    const ssoUrl = new URL(process.env.NEXT_PUBLIC_SSO_LOGIN_URL || '');
+    ssoUrl.searchParams.set('callbackUrl', currentUrl);
+
+    window.location.href = ssoUrl.toString();
+  },
+  showNotification: () => {
+    // For compatibility - just redirect
+    loginRequired.redirect();
   },
 };

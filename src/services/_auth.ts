@@ -9,6 +9,7 @@ import {
 import { clientApiKeyManager } from '@lobechat/utils/client';
 import { ModelProvider } from 'model-bank';
 
+import { SSO_APP_TOKEN_KEY, SSO_USER_TOKEN_KEY } from '@/libs/sso';
 import { aiProviderSelectors, useAiInfraStore } from '@/store/aiInfra';
 
 import { resolveRuntimeProvider } from './chat/helper';
@@ -99,6 +100,34 @@ export const getProviderAuthPayload = (
   }
 };
 
+/**
+ * Get SSO tokens from cookie (priority) or localStorage
+ */
+const getSSOTokensFromStorage = (): { userToken?: string; appToken?: string } => {
+  if (typeof window === 'undefined') return {};
+
+  // First try to get from cookie
+  const cookies = document.cookie.split(';');
+  const userTokenCookie = cookies.find((c) => c.trim().startsWith(`${SSO_USER_TOKEN_KEY}=`));
+  const appTokenCookie = cookies.find((c) => c.trim().startsWith(`${SSO_APP_TOKEN_KEY}=`));
+
+  if (userTokenCookie && appTokenCookie) {
+    const userToken = decodeURIComponent(userTokenCookie.split('=')[1]);
+    const appToken = decodeURIComponent(appTokenCookie.split('=')[1]);
+    if (userToken && appToken) {
+      return { appToken, userToken };
+    }
+  }
+
+  // Fallback to localStorage
+  const userToken = localStorage.getItem(SSO_USER_TOKEN_KEY);
+  const appToken = localStorage.getItem(SSO_APP_TOKEN_KEY);
+
+  if (!userToken || !appToken) return {};
+
+  return { appToken, userToken };
+};
+
 interface AuthParams {
   headers?: HeadersInit;
   provider?: string;
@@ -117,5 +146,15 @@ export const createPayloadWithKeyVaults = (provider: string) => {
 };
 
 export const createHeaderWithAuth = async (params?: AuthParams): Promise<HeadersInit> => {
-  return { ...params?.headers };
+  // Get SSO tokens from localStorage and add to headers
+  const ssoTokens = getSSOTokensFromStorage();
+  const ssoHeaders: HeadersInit = {};
+  if (ssoTokens.userToken) {
+    ssoHeaders['RZZX-USERTOKEN'] = ssoTokens.userToken;
+  }
+  if (ssoTokens.appToken) {
+    ssoHeaders['RZZX-APPTOKEN'] = ssoTokens.appToken;
+  }
+
+  return { ...params?.headers, ...ssoHeaders };
 };

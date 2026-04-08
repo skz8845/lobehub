@@ -572,6 +572,12 @@ export const desktopRoutes: RouteObject[] = [
 ];
 
 desktopRoutes.push({
+  element: dynamicElement(() => import('@/routes/sso'), 'Desktop > SSO'),
+  errorElement: <ErrorBoundary resetPath="/" />,
+  path: '/sso',
+});
+
+desktopRoutes.push({
   element: dynamicElement(() => import('@/routes/onboarding'), 'Desktop > Onboarding'),
   errorElement: <ErrorBoundary />,
   path: '/onboarding',

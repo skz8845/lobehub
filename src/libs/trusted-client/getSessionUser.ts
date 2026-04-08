@@ -1,4 +1,7 @@
+import { parse } from 'cookie';
 import { headers } from 'next/headers';
+
+import { decodeSession, SSO_COOKIE_NAME } from '@/libs/sso';
 
 import { type TrustedClientUserInfo } from './index';
 
@@ -9,21 +12,38 @@ import { type TrustedClientUserInfo } from './index';
  */
 export const getSessionUser = async (): Promise<TrustedClientUserInfo | undefined> => {
   try {
-    // Dynamic import to avoid validator ESM/CJS issue during sitemap generation
-    const { auth } = await import('@/auth');
     const headersList = await headers();
-    const session = await auth.api.getSession({
-      headers: headersList,
-    });
+    const cookieHeader = headersList.get('cookie');
 
-    if (!session?.user?.id || !session?.user?.email) {
+    if (!cookieHeader) {
       return undefined;
     }
 
+    const cookies = parse(cookieHeader);
+    const ssoSessionData = cookies[SSO_COOKIE_NAME];
+
+    if (!ssoSessionData) {
+      return undefined;
+    }
+
+    const session = decodeSession(decodeURIComponent(ssoSessionData));
+
+    if (!session?.userId || !session?.email) {
+      return undefined;
+    }
+
+    // Check if session is expired
+    if (session.expireAt) {
+      const expireDate = new Date(session.expireAt);
+      if (expireDate < new Date()) {
+        return undefined;
+      }
+    }
+
     return {
-      email: session.user.email,
-      name: session.user.name || undefined,
-      userId: session.user.id,
+      email: session.email,
+      name: session.name || undefined,
+      userId: session.userId,
     };
   } catch {
     return undefined;

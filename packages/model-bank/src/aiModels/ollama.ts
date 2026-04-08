@@ -492,6 +492,89 @@ const ollamaChatModels: AIChatModelCard[] = [
     id: 'minicpm-v',
     type: 'chat',
   },
+  {
+    abilities: {
+      functionCall: true,
+      reasoning: true,
+      search: true,
+      structuredOutput: true,
+    },
+    contextWindowTokens: 200000,
+    description:
+      "GLM-4.7-Flash (Quantized Q4_K_M) is a highly efficient version of Zhipu AI's flagship model, optimized for speed and long-context reasoning.",
+    displayName: 'GLM-4.7-Flash',
+    enabled: true,
+    id: 'glm-4.7-flash:q4_K_M',
+    maxOutput: 64000,
+    pricing: {
+      units: [
+        { name: 'textInput_cacheRead', rate: 0.1, strategy: 'fixed', unit: 'millionTokens' },
+        { name: 'textInput', rate: 1, strategy: 'fixed', unit: 'millionTokens' },
+        { name: 'textOutput', rate: 2, strategy: 'fixed', unit: 'millionTokens' },
+        {
+          lookup: { prices: { '1h': 0.5, '5m': 0.3 }, pricingParams: ['ttl'] },
+          name: 'textInput_cacheWrite',
+          strategy: 'lookup',
+          unit: 'millionTokens',
+        },
+      ],
+    },
+    releasedAt: '2026-03-15',
+    settings: {
+      extendParams: ['disableContextCaching'],
+      searchImpl: 'params',
+    },
+    type: 'chat',
+  },
+  {
+    abilities: {
+      functionCall: true,
+      reasoning: true,
+      video: true,
+      vision: true,
+    },
+    contextWindowTokens: 262_144,
+    description:
+      'Supports text, image, and video inputs. For text-only tasks, its performance is comparable to Qwen3 Max, offering higher efficiency and lower cost. In multimodal capabilities, it delivers significant improvements over the Qwen3 VL series.',
+    displayName: 'Qwen3.5-35B-A3B',
+    id: 'qwen3.5:35b-a3b',
+    enabled: true,
+    maxOutput: 65_536,
+    pricing: {
+      currency: 'CNY',
+      units: [
+        {
+          lookup: {
+            prices: {
+              '[0, 0.128]': 0.4,
+              '[0.128, infinity]': 1.6,
+            },
+            pricingParams: ['textInputRange'],
+          },
+          name: 'textInput',
+          strategy: 'lookup',
+          unit: 'millionTokens',
+        },
+        {
+          lookup: {
+            prices: {
+              '[0, 0.128]': 3.2,
+              '[0.128, infinity]': 12.8,
+            },
+            pricingParams: ['textInputRange'],
+          },
+          name: 'textOutput',
+          strategy: 'lookup',
+          unit: 'millionTokens',
+        },
+      ],
+    },
+    releasedAt: '2026-02-24',
+    settings: {
+      extendParams: ['reasoningBudgetToken'],
+    },
+    type: 'chat',
+  },
 ];
 
 export const allModels = [...ollamaChatModels];

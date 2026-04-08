@@ -1,5 +1,6 @@
 import { type SSOProvider } from '@lobechat/types';
 
+import type { SSOMenu } from '@/libs/sso/types';
 import { type LobeUser } from '@/types/user';
 
 export interface UserAuthState {
@@ -12,7 +13,13 @@ export interface UserAuthState {
   isLoadedAuthProviders?: boolean;
 
   isSignedIn?: boolean;
+
+  menus?: SSOMenu[];
+
   oAuthSSOProviders?: string[];
+
+  permissions?: string[];
+  roles?: string[];
   user?: LobeUser;
 }
 
