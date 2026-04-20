@@ -124,7 +124,7 @@ const googleChatModels: AIChatModelCard[] = [
     description:
       "Gemini 3.1 Flash Image (Nano Banana 2) is Google's fastest native image generation model with thinking support, conversational image generation and editing.",
     displayName: 'Nano Banana 2',
-    enabled: true,
+    enabled: false,
     id: 'gemini-3.1-flash-image-preview',
     maxOutput: 32_768,
     pricing: {
@@ -156,7 +156,7 @@ const googleChatModels: AIChatModelCard[] = [
     description:
       'Gemini 3.1 Pro Preview improves on Gemini 3 Pro with enhanced reasoning capabilities and adds medium thinking level support.',
     displayName: 'Gemini 3.1 Pro Preview',
-    enabled: true,
+    enabled: false,
     id: 'gemini-3.1-pro-preview',
     maxOutput: 65_536,
     pricing: {
@@ -217,7 +217,7 @@ const googleChatModels: AIChatModelCard[] = [
     description:
       "Gemini 3.1 Flash-Lite Preview is Google's most cost-efficient multimodal model, optimized for high-volume agentic tasks, translation, and data processing.",
     displayName: 'Gemini 3.1 Flash-Lite Preview',
-    enabled: true,
+    enabled: false,
     id: 'gemini-3.1-flash-lite-preview',
     maxOutput: 65_536,
     pricing: {
@@ -247,7 +247,7 @@ const googleChatModels: AIChatModelCard[] = [
     description:
       'Gemini 3 Flash is the smartest model built for speed, combining cutting-edge intelligence with excellent search grounding.',
     displayName: 'Gemini 3 Flash Preview',
-    enabled: true,
+    enabled: false,
     id: 'gemini-3-flash-preview',
     maxOutput: 65_536,
     pricing: {
@@ -282,7 +282,7 @@ const googleChatModels: AIChatModelCard[] = [
     description:
       'Gemini 3 Pro Image (Nano Banana Pro) is Google’s image generation model and also supports multimodal chat.',
     displayName: 'Nano Banana Pro',
-    enabled: true,
+    enabled: false,
     id: 'gemini-3-pro-image-preview',
     maxOutput: 32_768,
     pricing: {
@@ -707,6 +707,43 @@ const googleChatModels: AIChatModelCard[] = [
     },
     type: 'chat',
   },
+  {
+    abilities: {
+      functionCall: true,
+      reasoning: false,
+      search: false,
+      structuredOutput: true,
+      vision: true,
+    },
+    contextWindowTokens: 262144,
+    description:
+      'Gemma 4 is a high-performing, efficient open model from Google built from the same technology used to create Gemini.',
+    displayName: 'gemma-4-e4b-it',
+    enabled: true,
+    id: 'gemma-4-e4b-it',
+    maxOutput: 65_535,
+    pricing: {
+      units: [
+        {
+          name: 'textInput',
+          strategy: 'fixed',
+          unit: 'millionTokens',
+          rate: 0,
+        },
+        {
+          name: 'textOutput',
+          strategy: 'fixed',
+          unit: 'millionTokens',
+          rate: 0,
+        },
+      ],
+    },
+    releasedAt: '2026-04-16',
+    settings: {
+      extendParams: [],
+    },
+    type: 'chat',
+  },
 ];
 
 // Common parameters for Imagen models
@@ -780,7 +817,7 @@ const googleImageModels: AIImageModelCard[] = [
     displayName: 'Nano Banana 2',
     id: 'gemini-3.1-flash-image-preview:image',
     type: 'image',
-    enabled: true,
+    enabled: false,
     description:
       "Gemini 3.1 Flash Image (Nano Banana 2) is Google's fastest native image generation model with thinking support, conversational image generation and editing.",
     releasedAt: '2026-02-26',
@@ -798,7 +835,7 @@ const googleImageModels: AIImageModelCard[] = [
     displayName: 'Nano Banana Pro',
     id: 'gemini-3-pro-image-preview:image',
     type: 'image',
-    enabled: true,
+    enabled: false,
     description:
       'Gemini 3 Pro Image (Nano Banana Pro) is Google’s image generation model and also supports multimodal chat.',
     releasedAt: '2025-11-18',
@@ -832,7 +869,7 @@ const googleImageModels: AIImageModelCard[] = [
   {
     displayName: 'Imagen 4',
     id: 'imagen-4.0-generate-001',
-    enabled: true,
+    enabled: false,
     type: 'image',
     description: 'Imagen fourth-generation text-to-image model family.',
     organization: 'Deepmind',
@@ -845,7 +882,7 @@ const googleImageModels: AIImageModelCard[] = [
   {
     displayName: 'Imagen 4 Ultra',
     id: 'imagen-4.0-ultra-generate-001',
-    enabled: true,
+    enabled: false,
     type: 'image',
     description: 'Imagen fourth-generation text-to-image Ultra variant.',
     organization: 'Deepmind',
@@ -858,7 +895,7 @@ const googleImageModels: AIImageModelCard[] = [
   {
     displayName: 'Imagen 4 Fast',
     id: 'imagen-4.0-fast-generate-001',
-    enabled: true,
+    enabled: false,
     type: 'image',
     description: 'Imagen fourth-generation text-to-image fast variant.',
     organization: 'Deepmind',
@@ -875,7 +912,7 @@ const googleVideoModels: AIVideoModelCard[] = [
     description:
       'Our latest video generation model, available to developers on the paid tier of the Gemini API.',
     displayName: 'Veo 3.1 Generate Preview',
-    enabled: true,
+    enabled: false,
     id: 'veo-3.1-generate-preview',
     parameters: {
       aspectRatio: {
@@ -907,7 +944,7 @@ const googleVideoModels: AIVideoModelCard[] = [
     description:
       'Our latest video generation model, available to developers on the paid tier of the Gemini API.',
     displayName: 'Veo 3.1 Fast Generate Preview',
-    enabled: true,
+    enabled: false,
     id: 'veo-3.1-fast-generate-preview',
     parameters: {
       aspectRatio: {
@@ -939,7 +976,7 @@ const googleVideoModels: AIVideoModelCard[] = [
     description:
       'Our stable video generation model, available to developers on the paid tier of the Gemini API.',
     displayName: 'Veo 3.0 Generate 001',
-    enabled: true,
+    enabled: false,
     id: 'veo-3.0-generate-001',
     parameters: {
       aspectRatio: {
@@ -967,7 +1004,7 @@ const googleVideoModels: AIVideoModelCard[] = [
     description:
       'Our stable video generation model, available to developers on the paid tier of the Gemini API.',
     displayName: 'Veo 3.0 Fast Generate 001',
-    enabled: true,
+    enabled: false,
     id: 'veo-3.0-fast-generate-001',
     parameters: {
       aspectRatio: {

@@ -1,13 +1,18 @@
 import type { ChatModelCard, ModelProviderCard } from '@/types/llm';
 
+// import OpenAI from './openai'
+import Google from './google';
 import OllamaProvider from './ollama';
 
 /**
  * @deprecated
  */
-export const LOBE_DEFAULT_MODEL_LIST: ChatModelCard[] = [OllamaProvider.chatModels].flat();
+export const LOBE_DEFAULT_MODEL_LIST: ChatModelCard[] = [
+  OllamaProvider.chatModels,
+  Google.chatModels,
+].flat();
 
-export const DEFAULT_MODEL_PROVIDER_LIST = [OllamaProvider];
+export const DEFAULT_MODEL_PROVIDER_LIST = [OllamaProvider, Google];
 
 export const filterEnabledModels = (provider: ModelProviderCard) => {
   return provider.chatModels.filter((v) => v.enabled).map((m) => m.id);

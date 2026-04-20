@@ -14,10 +14,6 @@ import { nextjsOnlyRoutes } from '../nextjsOnlyRoutes';
 
 // Create debug logger instances
 const logDefault = debug('middleware:default');
-const logBetterAuth = debug('middleware:better-auth');
-
-// Dev-only debug proxy route should bypass all middleware rewrites.
-const dangerousLocalDevProxyRoute = '/_dangerous_local_dev_proxy';
 
 export function defineConfig() {
   const backendApiEndpoints = ['/api', '/trpc', '/webapi', '/oidc'];
@@ -81,14 +77,6 @@ export function defineConfig() {
       url.protocol = 'http';
       url.host = '127.0.0.1';
       url.port = process.env.PORT || '3210';
-    }
-
-    if (
-      url.pathname === dangerousLocalDevProxyRoute ||
-      url.pathname.startsWith(`${dangerousLocalDevProxyRoute}/`)
-    ) {
-      logDefault('Skipping rewrite for dangerous local dev proxy route: %s', url.pathname);
-      return NextResponse.next();
     }
 
     const isNextjsRoute = nextjsOnlyRoutes.some((r) => url.pathname.startsWith(r));

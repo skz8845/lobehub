@@ -47,18 +47,7 @@ export default defineConfig({
           bold: (s: string) => `\x1B[1m${s}\x1B[0m`,
           cyan: (s: string) => `\x1B[36m${s}\x1B[0m`,
         };
-        const { info } = server.config.logger;
-        return () => {
-          server.printUrls = () => {
-            const urls = server.resolvedUrls;
-            if (!urls?.local?.[0]) return;
-            const localHost = urls.local[0].replace(/\/$/, '');
-            const proxyUrl = `${ONLINE_HOST}/_dangerous_local_dev_proxy?debug-host=${encodeURIComponent(localHost)}`;
-            const colorUrl = (url: string) =>
-              c.cyan(url.replace(/:(\d+)\//, (_, port) => `:${c.bold(port)}/`));
-            info(`  ${c.green('➜')}  ${c.bold('Debug Proxy')}: ${colorUrl(proxyUrl)}`);
-          };
-        };
+        return () => {};
       },
     },
 

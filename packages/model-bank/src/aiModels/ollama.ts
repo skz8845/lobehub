@@ -503,7 +503,7 @@ const ollamaChatModels: AIChatModelCard[] = [
     description:
       "GLM-4.7-Flash (Quantized Q4_K_M) is a highly efficient version of Zhipu AI's flagship model, optimized for speed and long-context reasoning.",
     displayName: 'GLM-4.7-Flash',
-    enabled: true,
+    enabled: false,
     id: 'glm-4.7-flash:q4_K_M',
     maxOutput: 64000,
     pricing: {
@@ -538,7 +538,7 @@ const ollamaChatModels: AIChatModelCard[] = [
       'Supports text, image, and video inputs. For text-only tasks, its performance is comparable to Qwen3 Max, offering higher efficiency and lower cost. In multimodal capabilities, it delivers significant improvements over the Qwen3 VL series.',
     displayName: 'Qwen3.5-35B-A3B',
     id: 'qwen3.5:35b-a3b',
-    enabled: true,
+    enabled: false,
     maxOutput: 65_536,
     pricing: {
       currency: 'CNY',

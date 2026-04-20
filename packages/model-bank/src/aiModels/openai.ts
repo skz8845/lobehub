@@ -31,7 +31,7 @@ export const openaiChatModels: AIChatModelCard[] = [
     description:
       'GPT-5.4 is the frontier model for complex professional work with highest reasoning capability.',
     displayName: 'GPT-5.4',
-    enabled: true,
+    enabled: false,
     id: 'gpt-5.4',
     maxOutput: 128_000,
     pricing: {
@@ -141,7 +141,7 @@ export const openaiChatModels: AIChatModelCard[] = [
     description:
       "GPT-5.4 mini is OpenAI's strongest mini model for coding, computer use, and subagents.",
     displayName: 'GPT-5.4 mini',
-    enabled: true,
+    enabled: false,
     id: 'gpt-5.4-mini',
     maxOutput: 128_000,
     pricing: {
@@ -170,7 +170,7 @@ export const openaiChatModels: AIChatModelCard[] = [
     description:
       "GPT-5.4 nano is OpenAI's cheapest GPT-5.4-class model for simple high-volume tasks.",
     displayName: 'GPT-5.4 nano',
-    enabled: true,
+    enabled: false,
     id: 'gpt-5.4-nano',
     maxOutput: 128_000,
     pricing: {
@@ -1451,7 +1451,7 @@ export const openaiImageModels: AIImageModelCard[] = [
     description:
       'An enhanced GPT Image 1 model with 4× faster generation, more precise editing, and improved text rendering.',
     displayName: 'GPT Image 1.5',
-    enabled: true,
+    enabled: false,
     id: 'gpt-image-1.5',
     parameters: gptImage1ParamsSchema,
     pricing: {
@@ -1471,7 +1471,7 @@ export const openaiImageModels: AIImageModelCard[] = [
   {
     description: 'ChatGPT native multimodal image generation model.',
     displayName: 'GPT Image 1',
-    enabled: true,
+    enabled: false,
     id: 'gpt-image-1',
     parameters: gptImage1ParamsSchema,
     pricing: {
@@ -1490,7 +1490,7 @@ export const openaiImageModels: AIImageModelCard[] = [
     description:
       'A lower-cost GPT Image 1 variant with native text and image input and image output.',
     displayName: 'GPT Image 1 Mini',
-    enabled: true,
+    enabled: false,
     id: 'gpt-image-1-mini',
     parameters: gptImage1ParamsSchema,
     pricing: {
@@ -1510,7 +1510,7 @@ export const openaiImageModels: AIImageModelCard[] = [
     description:
       'The latest DALL·E model, released in November 2023, supports more realistic, accurate image generation with stronger detail.',
     displayName: 'DALL·E 3',
-    enabled: true,
+    enabled: false,
     id: 'dall-e-3',
     parameters: {
       prompt: { default: '' },
@@ -1692,7 +1692,7 @@ export const openaiVideoModels: AIVideoModelCard[] = [
     description:
       'Sora 2 is our new powerful media generation model, generating videos with synced audio. It can create richly detailed, dynamic clips from natural language or images.',
     displayName: 'Sora 2',
-    enabled: true,
+    enabled: false,
     id: 'sora-2',
     parameters: {
       duration: { default: 4, enum: [4, 8, 12] },
@@ -1715,7 +1715,7 @@ export const openaiVideoModels: AIVideoModelCard[] = [
     description:
       'Sora 2 Pro is our state-of-the-art, most advanced media generation model, generating videos with synced audio. It can create richly detailed, dynamic clips from natural language or images.',
     displayName: 'Sora 2 Pro',
-    enabled: true,
+    enabled: false,
     id: 'sora-2-pro',
     parameters: {
       duration: { default: 4, enum: [4, 8, 12] },
