@@ -65,12 +65,15 @@ const groupAndRankFiles = (chunks: ChatSemanticSearchChunk[], topK: number): Fil
     });
   }
 
-  // Calculate relevance score for each file (average of top 3 chunks)
+  // Calculate relevance score for each file (weighted: max * 0.6 + avg * 0.4)
   for (const fileResult of fileMap.values()) {
     fileResult.topChunks.sort((a, b) => b.similarity - a.similarity);
     const top3 = fileResult.topChunks.slice(0, 3);
-    fileResult.relevanceScore =
-      top3.reduce((sum, chunk) => sum + chunk.similarity, 0) / top3.length;
+    const maxSimilarity = top3.length > 0 ? top3[0].similarity : 0;
+    const avgSimilarity =
+      top3.length > 0 ? top3.reduce((sum, chunk) => sum + chunk.similarity, 0) / top3.length : 0;
+
+    fileResult.relevanceScore = maxSimilarity * 0.6 + avgSimilarity * 0.4;
     // Keep only top chunks per file
     fileResult.topChunks = fileResult.topChunks.slice(0, 3);
   }

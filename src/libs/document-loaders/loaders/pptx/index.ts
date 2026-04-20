@@ -1,4 +1,6 @@
+import { splitText } from '../../splitter';
 import { type DocumentChunk } from '../../types';
+import { loaderConfig } from '../config';
 
 export const PPTXLoader = async (fileBlob: Blob | string): Promise<DocumentChunk[]> => {
   const { parseOfficeAsync } = await import('officeparser');
@@ -10,10 +12,5 @@ export const PPTXLoader = async (fileBlob: Blob | string): Promise<DocumentChunk
 
   const text = await parseOfficeAsync(buffer);
 
-  return [
-    {
-      metadata: {},
-      pageContent: text,
-    },
-  ];
+  return splitText(text, loaderConfig);
 };

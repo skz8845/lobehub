@@ -1,4 +1,6 @@
+import { splitText } from '../../splitter';
 import { type DocumentChunk } from '../../types';
+import { loaderConfig } from '../config';
 
 export const PdfLoader = async (fileBlob: Blob): Promise<DocumentChunk[]> => {
   const pdfParse = (await import('pdf-parse')).default;
@@ -11,10 +13,20 @@ export const PdfLoader = async (fileBlob: Blob): Promise<DocumentChunk[]> => {
     ? data.text.split(/\f/).filter((page: string) => page.trim().length > 0)
     : [];
 
-  return pages.map((pageContent: string, index: number) => ({
-    metadata: {
-      loc: { pageNumber: index + 1 },
-    },
-    pageContent: pageContent.trim(),
-  }));
+  const chunks: DocumentChunk[] = [];
+
+  for (const [index, pageText] of pages.entries()) {
+    const pageChunks = splitText(pageText.trim(), loaderConfig);
+    for (const chunk of pageChunks) {
+      chunks.push({
+        metadata: {
+          ...chunk.metadata,
+          loc: { pageNumber: index + 1 },
+        },
+        pageContent: chunk.pageContent,
+      });
+    }
+  }
+
+  return chunks;
 };
