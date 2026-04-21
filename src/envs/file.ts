@@ -26,6 +26,10 @@ export const getFileConfig = () => {
       CHUNKS_AUTO_GEN_METADATA: process.env.CHUNKS_AUTO_GEN_METADATA !== '0',
       EMBEDDING_BATCH_SIZE: process.env.EMBEDDING_BATCH_SIZE,
       EMBEDDING_CONCURRENCY: process.env.EMBEDDING_CONCURRENCY,
+      RAG_CANDIDATE_POOL_SIZE: process.env.RAG_CANDIDATE_POOL_SIZE,
+      RAG_CHUNK_OVERLAP: process.env.RAG_CHUNK_OVERLAP,
+      RAG_CHUNK_SIZE: process.env.RAG_CHUNK_SIZE,
+      RAG_MIN_SIMILARITY: process.env.RAG_MIN_SIMILARITY,
 
       NEXT_PUBLIC_S3_DOMAIN: process.env.NEXT_PUBLIC_S3_DOMAIN,
       NEXT_PUBLIC_S3_FILE_PATH: process.env.NEXT_PUBLIC_S3_FILE_PATH || DEFAULT_S3_FILE_PATH,
@@ -45,6 +49,10 @@ export const getFileConfig = () => {
       CHUNKS_AUTO_GEN_METADATA: z.boolean(),
       EMBEDDING_BATCH_SIZE: z.coerce.number().int().positive().default(50),
       EMBEDDING_CONCURRENCY: z.coerce.number().int().positive().default(10),
+      RAG_CANDIDATE_POOL_SIZE: z.coerce.number().int().positive().default(60),
+      RAG_CHUNK_OVERLAP: z.coerce.number().int().nonnegative().default(150),
+      RAG_CHUNK_SIZE: z.coerce.number().int().positive().default(1000),
+      RAG_MIN_SIMILARITY: z.coerce.number().min(0).max(1).default(0),
 
       // S3
       S3_ACCESS_KEY_ID: z.string().optional(),

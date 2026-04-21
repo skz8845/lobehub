@@ -10,6 +10,7 @@ import { calculatorExecutor } from '@lobechat/builtin-tool-calculator/executor';
 import { cloudSandboxExecutor } from '@lobechat/builtin-tool-cloud-sandbox/executor';
 import { credsExecutor } from '@lobechat/builtin-tool-creds/executor';
 import { cronExecutor } from '@lobechat/builtin-tool-cron/executor';
+import { cveAnalyzerExecutor } from '@lobechat/builtin-tool-cve-analyzer/executor';
 import { groupAgentBuilderExecutor } from '@lobechat/builtin-tool-group-agent-builder/executor';
 import { groupManagementExecutor } from '@lobechat/builtin-tool-group-management/executor';
 import { gtdExecutor } from '@lobechat/builtin-tool-gtd/executor';
@@ -27,7 +28,6 @@ import { skillStoreExecutor } from './lobe-skill-store';
 import { skillsExecutor } from './lobe-skills';
 import { topicReferenceExecutor } from './lobe-topic-reference';
 import { userInteractionExecutor } from './lobe-user-interaction';
-import { webBrowsing } from './lobe-web-browsing';
 import { webOnboardingExecutor } from './lobe-web-onboarding';
 
 // ==================== Import and register all executors ====================
@@ -137,6 +137,7 @@ registerExecutors([
   agentManagementExecutor,
   calculatorExecutor,
   cloudSandboxExecutor,
+  cveAnalyzerExecutor,
   credsExecutor,
   cronExecutor,
   groupAgentBuilderExecutor,
@@ -154,5 +155,5 @@ registerExecutors([
   topicReferenceExecutor,
   userInteractionExecutor,
   webOnboardingExecutor,
-  webBrowsing,
+  // webBrowsing,
 ]);

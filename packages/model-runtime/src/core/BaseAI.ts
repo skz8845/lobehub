@@ -17,6 +17,9 @@ import type {
   HandleCreateVideoWebhookResult,
   ModelRequestOptions,
   PullModelParams,
+  RerankOptions,
+  RerankPayload,
+  RerankResult,
   TextToSpeechOptions,
   TextToSpeechPayload,
 } from '../types';
@@ -51,6 +54,8 @@ export interface LobeRuntimeAI {
 
   // Model management related interface
   pullModel?: (params: PullModelParams, options?: ModelRequestOptions) => Promise<Response>;
+
+  rerank?: (payload: RerankPayload, options?: RerankOptions) => Promise<RerankResult[]>;
 
   textToSpeech?: (
     payload: TextToSpeechPayload,

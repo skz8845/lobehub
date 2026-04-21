@@ -1,0 +1,351 @@
+{
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "build": "bun run build:spa && bun run build:spa:copy && bun run build:next",
+      "build:analyze": "cross-env NODE_OPTIONS=--max-old-space-size=81920 next experimental-analyze",
+      "build:docker": "pnpm run build:spa && pnpm run build:spa:mobile && pnpm run build:spa:copy && cross-env NODE_OPTIONS=--max-old-space-size=8192 DOCKER=true next build && pnpm run build-sitemap",
+      "build:next": "cross-env NODE_OPTIONS=--max-old-space-size=7168 bun run build:next:raw",
+      "build:next:raw": "next build",
+      "build:raw": "bun run build:spa:raw && bun run build:spa:copy && bun run build:next:raw",
+      "build:spa": "cross-env NODE_OPTIONS=--max-old-space-size=8192 pnpm run build:spa:raw",
+      "build:spa:copy": "tsx scripts/copySpaBuild.mts && tsx scripts/generateSpaTemplates.mts",
+      "build:spa:mobile": "cross-env NODE_OPTIONS=--max-old-space-size=8192 MOBILE=true vite build",
+      "build:spa:raw": "rm -rf public/_spa && vite build",
+      "build:vercel": "cross-env-shell NODE_OPTIONS=--max-old-space-size=8192 \"bun run build:raw && bun run db:migrate\"",
+      "build-migrate-db": "bun run db:migrate",
+      "build-sitemap": "tsx ./scripts/buildSitemapIndex/index.ts",
+      "clean:node_modules": "bash -lc 'set -e; echo \"Removing all node_modules...\"; rm -rf node_modules; pnpm -r exec rm -rf node_modules; rm -rf apps/desktop/node_modules; echo \"All node_modules removed.\"'",
+      "db:generate": "drizzle-kit generate && npm run workflow:dbml",
+      "db:migrate": "cross-env MIGRATION_DB=1 tsx ./scripts/migrateServerDB/index.ts",
+      "db:studio": "drizzle-kit studio",
+      "db:visualize": "dbdocs build docs/development/database-schema.dbml --project lobe-chat",
+      "desktop:build:all": "npm run desktop:build:main",
+      "desktop:build:main": "npm run build:main --prefix=./apps/desktop",
+      "desktop:build-channel": "tsx scripts/electronWorkflow/buildDesktopChannel.ts",
+      "desktop:main:build": "npm run desktop:main:build --prefix=./apps/desktop",
+      "desktop:package:app": "npm run desktop:build:all && npm run desktop:package:app:platform",
+      "desktop:package:app:platform": "tsx scripts/electronWorkflow/buildElectron.ts",
+      "desktop:package:local": "npm run desktop:build:all && npm run package:local --prefix=./apps/desktop",
+      "desktop:package:local:reuse": "npm run package:local:reuse --prefix=./apps/desktop",
+      "dev": "tsx scripts/devStartupSequence.mts",
+      "dev:bun": "bun --bun next dev -p 3010",
+      "dev:desktop": "cd apps/desktop && pnpm run dev",
+      "dev:docker": "docker compose -f docker-compose/dev/docker-compose.yml up -d --wait postgresql redis rustfs searxng",
+      "dev:docker:down": "docker compose -f docker-compose/dev/docker-compose.yml down",
+      "dev:docker:reset": "docker compose -f docker-compose/dev/docker-compose.yml down -v && rm -rf docker-compose/dev/data && npm run dev:docker && pnpm db:migrate",
+      "dev:next": "next dev -p 3010",
+      "dev:spa": "vite --port 9876",
+      "dev:spa:mobile": "cross-env MOBILE=true vite --port 3012",
+      "docs:cdn": "npm run workflow:docs-cdn && npm run lint:mdx",
+      "docs:i18n": "lobe-i18n md && npm run lint:mdx",
+      "docs:seo": "lobe-seo && npm run lint:mdx",
+      "e2e": "cd e2e && npm run test",
+      "e2e:install": "playwright install",
+      "e2e:ui": "playwright test --ui",
+      "hotfix:branch": "tsx ./scripts/hotfixWorkflow/index.ts",
+      "i18n": "npm run workflow:i18n && lobe-i18n && prettier -c --write \"locales/**\"",
+      "i18n:unused": "tsx ./scripts/i18nWorkflow/analyzeUnusedKeys.ts",
+      "i18n:unused-clean": "tsx ./scripts/i18nWorkflow/cleanUnusedKeys.ts",
+      "lint": "npm run lint:ts && npm run lint:style && npm run type-check && npm run lint:circular",
+      "lint:circular": "npm run lint:circular:main && npm run lint:circular:packages",
+      "lint:circular:main": "dpdm src/**/*.ts  --no-warning --no-tree --exit-code circular:1 --no-progress -T true --skip-dynamic-imports circular",
+      "lint:circular:packages": "dpdm packages/**/src/**/*.ts  --no-warning --no-tree --exit-code circular:1 --no-progress -T true --skip-dynamic-imports circular",
+      "lint:console": "tsx scripts/checkConsoleLog.mts",
+      "lint:md": "remark . --silent --output",
+      "lint:mdx": "npm run workflow:mdx && remark \"docs/**/*.mdx\" -r ./.remarkrc.mdx.mjs --silent --output && eslint \"docs/**/*.mdx\" --quiet --fix",
+      "lint:style": "stylelint \"{src,tests}/**/*.{js,jsx,ts,tsx}\" --fix",
+      "lint:ts": "eslint src/ tests/ --concurrency=auto",
+      "lint:unused": "knip --include files,exports,types,enumMembers,duplicates",
+      "prepare": "husky",
+      "prettier": "prettier -c --write \"**/**\"",
+      "pull": "git pull",
+      "qstash": "pnpx @upstash/qstash-cli@latest dev",
+      "reinstall": "rm -rf .next && rm -rf node_modules && rm -rf ./packages/*/node_modules && pnpm -r exec rm -rf node_modules && pnpm install",
+      "reinstall:desktop": "rm -rf pnpm-lock.yaml && rm -rf node_modules && pnpm -r exec rm -rf node_modules && pnpm install --node-linker=hoisted",
+      "release": "semantic-release",
+      "release:branch": "tsx ./scripts/releaseWorkflow/index.ts",
+      "self-hosting:docker": "docker build -t lobehub:local .",
+      "self-hosting:docker-cn": "docker build -t lobehub-local --build-arg USE_CN_MIRROR=true .",
+      "start": "next start -p 3210",
+      "stylelint": "stylelint \"src/**/*.{js,jsx,ts,tsx}\" --fix",
+      "test": "npm run test-app && npm run test-server",
+      "test:e2e": "pnpm --filter @lobechat/e2e-tests test",
+      "test:e2e:smoke": "pnpm --filter @lobechat/e2e-tests test:smoke",
+      "test:update": "vitest -u",
+      "test-app": "vitest run",
+      "test-app:coverage": "vitest --coverage --silent='passed-only'",
+      "tunnel:cloudflare": "cloudflared tunnel --url http://localhost:3010",
+      "tunnel:ngrok": "ngrok http http://localhost:3010",
+      "type-check": "tsgo --noEmit",
+      "type-check:tsc": "tsc --noEmit",
+      "workflow:cdn": "tsx ./scripts/cdnWorkflow/index.ts",
+      "workflow:changelog": "tsx ./scripts/changelogWorkflow/index.ts",
+      "workflow:changelog:gen": "tsx ./scripts/changelogWorkflow/generateChangelog.ts",
+      "workflow:countCharters": "tsx scripts/countEnWord.ts",
+      "workflow:dbml": "tsx ./scripts/dbmlWorkflow/index.ts",
+      "workflow:docs": "tsx ./scripts/docsWorkflow/index.ts",
+      "workflow:docs-cdn": "tsx ./scripts/docsWorkflow/autoCDN.ts",
+      "workflow:i18n": "tsx ./scripts/i18nWorkflow/index.ts",
+      "workflow:mdx": "tsx ./scripts/mdxWorkflow/index.ts",
+      "workflow:mobile-spa": "tsx scripts/mobileSpaWorkflow/index.ts",
+      "workflow:readme": "tsx ./scripts/readmeWorkflow/index.ts",
+      "workflow:set-desktop-version": "tsx ./scripts/electronWorkflow/setDesktopVersion.ts"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": "ES modules",
+    "testPattern": null,
+    "fileOrganization": "feature-based"
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "apps": {
+      "path": "apps",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775722829395,
+      "keyFiles": []
+    },
+    "changelog": {
+      "path": "changelog",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1775722829397,
+      "keyFiles": ["CHANGELOG.v0.md", "CHANGELOG.v1.md", "v0.json", "v1.json", "v2.json"]
+    },
+    "docker-compose": {
+      "path": "docker-compose",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1775722829412,
+      "keyFiles": ["setup.sh"]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 3,
+      "lastAccessed": 1775722829412,
+      "keyFiles": ["glossary.md", "glossary.zh-CN.md"]
+    },
+    "e2e": {
+      "path": "e2e",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1775722829413,
+      "keyFiles": ["CLAUDE.md", "cucumber.config.js", "package.json", "README.md", "tsconfig.json"]
+    },
+    "locales": {
+      "path": "locales",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775722829413,
+      "keyFiles": []
+    },
+    "packages": {
+      "path": "packages",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775722829414,
+      "keyFiles": []
+    },
+    "patches": {
+      "path": "patches",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1775722829415,
+      "keyFiles": ["@upstash__qstash.patch"]
+    },
+    "plugins": {
+      "path": "plugins",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775722829416,
+      "keyFiles": []
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 19,
+      "lastAccessed": 1775722829416,
+      "keyFiles": [
+        "apple-touch-icon.png",
+        "favicon-32x-32-error.ico",
+        "favicon-32x32-dev.ico",
+        "favicon-32x32-done-dev.ico",
+        "favicon-32x32-done.ico"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 13,
+      "lastAccessed": 1775722829417,
+      "keyFiles": [
+        "checkConsoleLog.mts",
+        "copySpaBuild.mts",
+        "countEnWord.ts",
+        "devStartupSequence.mts",
+        "dockerPrebuild.mts"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 6,
+      "lastAccessed": 1775722829418,
+      "keyFiles": [
+        "auth.ts",
+        "initialize.ts",
+        "instrumentation.node.ts",
+        "instrumentation.ts",
+        "proxy.ts"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 2,
+      "lastAccessed": 1775722829420,
+      "keyFiles": ["setup.ts", "utils.tsx"]
+    },
+    "__mocks__": {
+      "path": "__mocks__",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1775722829421,
+      "keyFiles": []
+    },
+    "e2e\\docs": {
+      "path": "e2e\\docs",
+      "purpose": "Documentation",
+      "fileCount": 3,
+      "lastAccessed": 1775722829422,
+      "keyFiles": ["llm-mock.md", "local-setup.md", "testing-tips.md"]
+    },
+    "e2e\\node_modules": {
+      "path": "e2e\\node_modules",
+      "purpose": "Dependencies",
+      "fileCount": 0,
+      "lastAccessed": 1775722829423,
+      "keyFiles": []
+    },
+    "e2e\\scripts": {
+      "path": "e2e\\scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 1,
+      "lastAccessed": 1775722829423,
+      "keyFiles": ["setup.ts"]
+    },
+    "e2e\\src": {
+      "path": "e2e\\src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1775722829423,
+      "keyFiles": []
+    },
+    "src\\app": {
+      "path": "src\\app",
+      "purpose": "Application code",
+      "fileCount": 5,
+      "lastAccessed": 1775722829425,
+      "keyFiles": ["layout.tsx", "manifest.ts", "not-found.tsx"]
+    },
+    "src\\components": {
+      "path": "src\\components",
+      "purpose": "UI components",
+      "fileCount": 9,
+      "lastAccessed": 1775722829425,
+      "keyFiles": ["AuthIcons.tsx", "DebugNode.tsx", "Link.tsx"]
+    },
+    "src\\config": {
+      "path": "src\\config",
+      "purpose": "Configuration files",
+      "fileCount": 2,
+      "lastAccessed": 1775722829426,
+      "keyFiles": ["db.ts", "klavis.ts"]
+    },
+    "src\\helpers": {
+      "path": "src\\helpers",
+      "purpose": "Helper functions",
+      "fileCount": 9,
+      "lastAccessed": 1775722829427,
+      "keyFiles": ["getSearchConfig.test.ts", "getSearchConfig.ts", "GlobalAgentContextManager.ts"]
+    },
+    "tests\\mocks": {
+      "path": "tests\\mocks",
+      "purpose": "Mock data",
+      "fileCount": 3,
+      "lastAccessed": 1775722829427,
+      "keyFiles": ["emojiMartData.ts", "emojiMartReact.tsx", "lru_map.ts"]
+    }
+  },
+  "hotPaths": [],
+  "lastScanned": 1775722829449,
+  "projectRoot": "d:\\project\\claude\\lobehub",
+  "structure": {
+    "isMonorepo": true,
+    "workspaces": ["packages/*", "packages/business/*", "e2e", "apps/desktop/src/main"],
+    "mainDirectories": ["docs", "public", "scripts", "src", "tests"],
+    "gitBranches": {
+      "defaultBranch": "canary",
+      "branchingStrategy": null
+    }
+  },
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": ["package.json"]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": ["tsconfig.json"]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "next",
+        "version": "16.1.5",
+        "category": "fullstack"
+      },
+      {
+        "name": "react",
+        "version": "19.2.3",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.3",
+        "category": "frontend"
+      },
+      {
+        "name": "@playwright/test",
+        "version": "1.58.0",
+        "category": "testing"
+      },
+      {
+        "name": "vite",
+        "version": "7.3.1",
+        "category": "build"
+      },
+      {
+        "name": "vitest",
+        "version": "3.2.4",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "userDirectives": [],
+  "version": "1.0.0"
+}

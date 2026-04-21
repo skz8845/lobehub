@@ -5,6 +5,7 @@ import { AgentManagementManifest } from '@lobechat/builtin-tool-agent-management
 import { CalculatorManifest } from '@lobechat/builtin-tool-calculator';
 import { CloudSandboxManifest } from '@lobechat/builtin-tool-cloud-sandbox';
 import { CredsManifest } from '@lobechat/builtin-tool-creds';
+import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
 import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
 import { GroupManagementManifest } from '@lobechat/builtin-tool-group-management';
 import { GTDManifest } from '@lobechat/builtin-tool-gtd';
@@ -17,7 +18,7 @@ import { SkillStoreManifest } from '@lobechat/builtin-tool-skill-store';
 import { SkillsManifest } from '@lobechat/builtin-tool-skills';
 import { TopicReferenceManifest } from '@lobechat/builtin-tool-topic-reference';
 import { UserInteractionManifest } from '@lobechat/builtin-tool-user-interaction';
-import { WebBrowsingManifest } from '@lobechat/builtin-tool-web-browsing';
+// import { WebBrowsingManifest } from '@lobechat/builtin-tool-web-browsing';
 import { WebOnboardingManifest } from '@lobechat/builtin-tool-web-onboarding';
 
 export const builtinToolIdentifiers: string[] = [
@@ -27,6 +28,7 @@ export const builtinToolIdentifiers: string[] = [
   CalculatorManifest.identifier,
   CloudSandboxManifest.identifier,
   CredsManifest.identifier,
+  CveAnalyzerManifest.identifier,
   GroupAgentBuilderManifest.identifier,
   GroupManagementManifest.identifier,
   GTDManifest.identifier,
@@ -39,7 +41,7 @@ export const builtinToolIdentifiers: string[] = [
   SkillStoreManifest.identifier,
   TopicReferenceManifest.identifier,
   LobeActivatorManifest.identifier,
-  WebBrowsingManifest.identifier,
+  // WebBrowsingManifest.identifier,
   UserInteractionManifest.identifier,
   WebOnboardingManifest.identifier,
 ];

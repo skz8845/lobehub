@@ -7,6 +7,7 @@ import { CalculatorManifest } from '@lobechat/builtin-tool-calculator';
 import { CloudSandboxManifest } from '@lobechat/builtin-tool-cloud-sandbox';
 import { CredsManifest } from '@lobechat/builtin-tool-creds';
 import { CronManifest } from '@lobechat/builtin-tool-cron';
+import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
 import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
 import { GroupManagementManifest } from '@lobechat/builtin-tool-group-management';
 import { GTDManifest } from '@lobechat/builtin-tool-gtd';
@@ -21,7 +22,7 @@ import { SkillsManifest } from '@lobechat/builtin-tool-skills';
 import { TaskManifest } from '@lobechat/builtin-tool-task';
 import { TopicReferenceManifest } from '@lobechat/builtin-tool-topic-reference';
 import { UserInteractionManifest } from '@lobechat/builtin-tool-user-interaction';
-import { WebBrowsingManifest } from '@lobechat/builtin-tool-web-browsing';
+// import { WebBrowsingManifest } from '@lobechat/builtin-tool-web-browsing';
 import { WebOnboardingManifest } from '@lobechat/builtin-tool-web-onboarding';
 import { isDesktop, RECOMMENDED_SKILLS, RecommendedSkillType } from '@lobechat/const';
 import { type LobeBuiltinTool } from '@lobechat/types';
@@ -34,11 +35,12 @@ export const defaultToolIds = [
   LobeActivatorManifest.identifier,
   SkillsManifest.identifier,
   SkillStoreManifest.identifier,
-  WebBrowsingManifest.identifier,
+  // WebBrowsingManifest.identifier,
   KnowledgeBaseManifest.identifier,
   MemoryManifest.identifier,
   LocalSystemManifest.identifier,
   CloudSandboxManifest.identifier,
+  CveAnalyzerManifest.identifier,
   TopicReferenceManifest.identifier,
   AgentDocumentsManifest.identifier,
   GTDManifest.identifier,
@@ -81,10 +83,11 @@ export const manualModeExcludeToolIds = [
 export const runtimeManagedToolIds = [
   CloudSandboxManifest.identifier,
   KnowledgeBaseManifest.identifier,
+  CveAnalyzerManifest.identifier,
   LocalSystemManifest.identifier,
   MemoryManifest.identifier,
   RemoteDeviceManifest.identifier,
-  WebBrowsingManifest.identifier,
+  // WebBrowsingManifest.identifier,
 ];
 
 export const builtinTools: LobeBuiltinTool[] = [
@@ -121,12 +124,12 @@ export const builtinTools: LobeBuiltinTool[] = [
     manifest: MemoryManifest,
     type: 'builtin',
   },
-  {
-    hidden: true,
-    identifier: WebBrowsingManifest.identifier,
-    manifest: WebBrowsingManifest,
-    type: 'builtin',
-  },
+  // {
+  //   hidden: true,
+  //   identifier: WebBrowsingManifest.identifier,
+  //   manifest: WebBrowsingManifest,
+  //   type: 'builtin',
+  // },
   {
     hidden: true,
     identifier: CloudSandboxManifest.identifier,
@@ -146,6 +149,12 @@ export const builtinTools: LobeBuiltinTool[] = [
   {
     identifier: CronManifest.identifier,
     manifest: CronManifest,
+    type: 'builtin',
+  },
+  {
+    hidden: true,
+    identifier: CveAnalyzerManifest.identifier,
+    manifest: CveAnalyzerManifest,
     type: 'builtin',
   },
   {

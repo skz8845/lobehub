@@ -14,6 +14,7 @@ import { calculatorRuntime } from './calculator';
 import { cloudSandboxRuntime } from './cloudSandbox';
 import { credsRuntime } from './creds';
 import { cronRuntime } from './cron';
+import { cveAnalyzerRuntime } from './cveAnalyzer';
 import { gtdRuntime } from './gtd';
 import { localSystemRuntime } from './localSystem';
 import { memoryRuntime } from './memory';
@@ -26,7 +27,6 @@ import { taskRuntime } from './task';
 import { topicReferenceRuntime } from './topicReference';
 import { type ServerRuntimeFactory, type ServerRuntimeRegistration } from './types';
 import { userInteractionRuntime } from './userInteraction';
-import { webBrowsingRuntime } from './webBrowsing';
 import { webOnboardingRuntime } from './webOnboarding';
 
 /**
@@ -45,9 +45,9 @@ const registerRuntimes = (runtimes: ServerRuntimeRegistration[]) => {
 
 // Register all server runtimes
 registerRuntimes([
-  webBrowsingRuntime,
   cloudSandboxRuntime,
   calculatorRuntime,
+  cveAnalyzerRuntime,
   agentDocumentsRuntime,
   notebookRuntime,
   skillStoreRuntime,

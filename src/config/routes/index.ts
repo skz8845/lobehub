@@ -119,5 +119,6 @@ export const getRouteById = (id: string): NavigationRoute | undefined =>
  */
 export const getNavigableRoutes = (): NavigationRoute[] =>
   NAVIGATION_ROUTES.filter((r) =>
-    ['community', 'video', 'image', 'resource', 'page', 'memory'].includes(r.id),
+    // ['community', 'video', 'image', 'resource', 'page', 'memory'].includes(r.id),
+    ['resource', 'page', 'memory'].includes(r.id),
   );

@@ -3,6 +3,7 @@ export * from './embeddings';
 export * from './error';
 export * from './image';
 export * from './model';
+export * from './rerank';
 export * from './structureOutput';
 export * from './toolsCalling';
 export * from './tts';

@@ -4,6 +4,7 @@ import { ModelProvider } from 'model-bank';
 import type { OpenAICompatibleFactoryOptions } from '../../core/openaiCompatibleFactory';
 import { createOpenAICompatibleRuntime } from '../../core/openaiCompatibleFactory';
 import { resolveParameters } from '../../core/parameterResolver';
+import type { RerankResult } from '../../types';
 
 export interface CohereModelCard {
   context_length: number;
@@ -70,6 +71,32 @@ export const params = {
       .filter(Boolean) as ChatModelCard[];
   },
   provider: ModelProvider.Cohere,
+  rerank: async ({ apiKey, payload }) => {
+    const response = await fetch('https://api.cohere.ai/v2/rerank', {
+      body: JSON.stringify({
+        documents: payload.documents,
+        model: payload.model,
+        query: payload.query,
+        return_documents: false,
+        top_n: payload.topN,
+      }),
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Cohere rerank failed (${response.status}): ${err}`);
+    }
+
+    const data = await response.json();
+    return (data.results as any[]).map(
+      (r): RerankResult => ({ index: r.index, relevanceScore: r.relevance_score }),
+    );
+  },
 } satisfies OpenAICompatibleFactoryOptions;
 
 export const LobeCohereAI = createOpenAICompatibleRuntime(params);

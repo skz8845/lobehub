@@ -2,6 +2,7 @@
  * Tools Engineering - Unified tools processing using ToolsEngine
  */
 import { CloudSandboxManifest } from '@lobechat/builtin-tool-cloud-sandbox';
+import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
 import { KnowledgeBaseManifest } from '@lobechat/builtin-tool-knowledge-base';
 import { LocalSystemManifest } from '@lobechat/builtin-tool-local-system';
 import { MemoryManifest } from '@lobechat/builtin-tool-memory';
@@ -161,6 +162,7 @@ export const createAgentToolsEngine = (
           agentChatConfigSelectors.currentChatConfig(agentState).memory?.enabled ??
           settingsSelectors.memoryEnabled(useUserStore.getState()),
         [WebBrowsingManifest.identifier]: searchConfig.useApplicationBuiltinSearchTool,
+        [CveAnalyzerManifest.identifier]: true,
       },
     }),
   });

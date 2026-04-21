@@ -20,6 +20,9 @@ import type {
   EmbeddingsPayload,
   GenerateObjectOptions,
   GenerateObjectPayload,
+  RerankOptions,
+  RerankPayload,
+  RerankResult,
   TextToSpeechOptions,
   TextToSpeechPayload,
 } from '../../types';
@@ -185,6 +188,12 @@ export interface OpenAICompatibleFactoryOptions<T extends Record<string, any> = 
         transformModel?: (model: OpenAI.Model) => ChatModelCard;
       };
   provider: string;
+  rerank?: (params: {
+    apiKey: string;
+    baseURL: string;
+    options?: RerankOptions;
+    payload: RerankPayload;
+  }) => Promise<RerankResult[]>;
   responses?: {
     handlePayload?: (
       payload: ChatStreamPayload,
@@ -209,6 +218,7 @@ export const createOpenAICompatibleRuntime = <T extends Record<string, any> = an
   handleCreateVideoWebhook: customHandleCreateVideoWebhook,
   handlePollVideoStatus: customHandlePollVideoStatus,
   generateObject: generateObjectConfig,
+  rerank: customRerank,
 }: OpenAICompatibleFactoryOptions<T>) => {
   const ErrorType = {
     bizError: errorType?.bizError || AgentRuntimeErrorType.ProviderBizError,
@@ -897,6 +907,16 @@ export const createOpenAICompatibleRuntime = <T extends Record<string, any> = an
       } catch (error) {
         throw this.handleError(error);
       }
+    }
+
+    async rerank(payload: RerankPayload, options?: RerankOptions): Promise<RerankResult[]> {
+      if (!customRerank) return [];
+      return customRerank({
+        apiKey: this._options.apiKey as string,
+        baseURL: this.baseURL,
+        options,
+        payload,
+      });
     }
 
     async textToSpeech(payload: TextToSpeechPayload, options?: TextToSpeechOptions) {

@@ -1,5 +1,5 @@
 import type { ChunkMetadata, FileChunk } from '@lobechat/types';
-import { and, asc, cosineDistance, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, cosineDistance, count, desc, eq, gte, inArray, isNull, sql } from 'drizzle-orm';
 import { chunk } from 'es-toolkit/compat';
 
 import type { NewChunkItem, NewUnstructuredChunkItem } from '../schemas';
@@ -139,9 +139,11 @@ export class ChunkModel {
   semanticSearch = async ({
     embedding,
     fileIds,
+    minSimilarity = 0,
   }: {
     embedding: number[];
     fileIds: string[] | undefined;
+    minSimilarity?: number;
     query: string;
   }) => {
     const similarity = sql<number>`1 - (${cosineDistance(embeddings.embeddings, embedding)})`;
@@ -161,7 +163,12 @@ export class ChunkModel {
       .leftJoin(embeddings, eq(chunks.id, embeddings.chunkId))
       .leftJoin(fileChunks, eq(chunks.id, fileChunks.chunkId))
       .leftJoin(files, eq(fileChunks.fileId, files.id))
-      .where(fileIds ? inArray(fileChunks.fileId, fileIds) : undefined)
+      .where(
+        and(
+          fileIds ? inArray(fileChunks.fileId, fileIds) : undefined,
+          minSimilarity > 0 ? gte(similarity, minSimilarity) : undefined,
+        ),
+      )
       .orderBy((t) => desc(t.similarity))
       .limit(30);
 
@@ -171,13 +178,58 @@ export class ChunkModel {
     }));
   };
 
+  bm25SearchForChat = async ({
+    fileIds,
+    query,
+    topK = 30,
+  }: {
+    fileIds: string[];
+    query: string;
+    topK?: number;
+  }): Promise<
+    {
+      fileId: string | null;
+      fileName: string | null;
+      id: string;
+      index: number | null;
+      text: string | null;
+    }[]
+  > => {
+    if (!fileIds || fileIds.length === 0) return [];
+
+    // ParadeDB BM25 search via paradedb.score() — requires the bm25 index on chunks table
+    const result = await this.db
+      .select({
+        fileId: files.id,
+        fileName: files.name,
+        id: chunks.id,
+        index: chunks.index,
+        text: chunks.text,
+      })
+      .from(chunks)
+      .leftJoin(fileChunks, eq(chunks.id, fileChunks.chunkId))
+      .leftJoin(files, eq(files.id, fileChunks.fileId))
+      .where(
+        and(
+          inArray(fileChunks.fileId, fileIds),
+          sql`chunks.id @@@ paradedb.parse('text:${sql.raw(`"${query.replaceAll('"', ' ')}"`)}')`,
+        ),
+      )
+      .orderBy(sql`paradedb.score(chunks.id) DESC`)
+      .limit(topK);
+
+    return result;
+  };
+
   semanticSearchForChat = async ({
     embedding,
     fileIds,
-    topK = 15,
+    minSimilarity = 0,
+    topK = 60,
   }: {
     embedding: number[];
     fileIds: string[] | undefined;
+    minSimilarity?: number;
     query: string;
     topK?: number;
   }) => {
@@ -186,6 +238,11 @@ export class ChunkModel {
     const hasFiles = fileIds && fileIds.length > 0;
 
     if (!hasFiles) return [];
+
+    const conditions = [
+      inArray(fileChunks.fileId, fileIds),
+      ...(minSimilarity > 0 ? [gte(similarity, minSimilarity)] : []),
+    ];
 
     const result = await this.db
       .select({
@@ -202,9 +259,8 @@ export class ChunkModel {
       .leftJoin(embeddings, eq(chunks.id, embeddings.chunkId))
       .leftJoin(fileChunks, eq(chunks.id, fileChunks.chunkId))
       .leftJoin(files, eq(files.id, fileChunks.fileId))
-      .where(inArray(fileChunks.fileId, fileIds))
+      .where(and(...conditions))
       .orderBy((t) => desc(t.similarity))
-      // Relaxed to 15 for now
       .limit(topK);
 
     return result.map((item) => {

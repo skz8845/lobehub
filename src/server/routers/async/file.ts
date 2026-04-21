@@ -59,8 +59,9 @@ export const fileRouter = router({
 
       const asyncTask = await ctx.asyncTaskModel.findById(input.taskId);
 
-      const { model, provider } =
+      const { model, provider, dimensions } =
         getServerDefaultFilesConfig().embeddingModel || DEFAULT_FILE_EMBEDDING_MODEL_ITEM;
+      const embeddingDimensions = dimensions ?? 1024;
 
       if (!asyncTask) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Async Task not found' });
 
@@ -102,7 +103,7 @@ export const fileRouter = router({
 
                 const embeddings = await modelRuntime.embeddings(
                   {
-                    dimensions: 1024,
+                    dimensions: embeddingDimensions,
                     input: chunks.map((c) => c.text),
                     model,
                   },

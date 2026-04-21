@@ -1,4 +1,4 @@
-import { DEFAULT_FILE_EMBEDDING_MODEL_ITEM } from '@lobechat/const';
+import { DEFAULT_FILE_EMBEDDING_MODEL_ITEM, DEFAULT_FILE_RERANK_MODEL_ITEM } from '@lobechat/const';
 import { type ChatSemanticSearchChunk, type FileSearchResult } from '@lobechat/types';
 import { RequestTrigger, SemanticSearchSchema } from '@lobechat/types';
 import { TRPCError } from '@trpc/server';
@@ -38,12 +38,12 @@ const chunkProcedure = authedProcedure.use(serverDatabase).use(async (opts) => {
 });
 
 /**
- * Group chunks by file and calculate relevance scores
+ * Group chunks by file and calculate relevance scores.
+ * Does NOT hard-cap chunks per file — all matched chunks are kept for context.
  */
 const groupAndRankFiles = (chunks: ChatSemanticSearchChunk[], topK: number): FileSearchResult[] => {
   const fileMap = new Map<string, FileSearchResult>();
 
-  // Group chunks by file
   for (const chunk of chunks) {
     const fileId = chunk.fileId || 'unknown';
     const fileName = chunk.fileName || `File ${fileId}`;
@@ -57,31 +57,53 @@ const groupAndRankFiles = (chunks: ChatSemanticSearchChunk[], topK: number): Fil
       });
     }
 
-    const fileResult = fileMap.get(fileId)!;
-    fileResult.topChunks.push({
+    fileMap.get(fileId)!.topChunks.push({
       id: chunk.id,
       similarity: chunk.similarity,
       text: chunk.text || '',
     });
   }
 
-  // Calculate relevance score for each file (weighted: max * 0.6 + avg * 0.4)
+  // Calculate relevance score: max * 0.6 + avg_top5 * 0.4
   for (const fileResult of fileMap.values()) {
     fileResult.topChunks.sort((a, b) => b.similarity - a.similarity);
-    const top3 = fileResult.topChunks.slice(0, 3);
-    const maxSimilarity = top3.length > 0 ? top3[0].similarity : 0;
-    const avgSimilarity =
-      top3.length > 0 ? top3.reduce((sum, chunk) => sum + chunk.similarity, 0) / top3.length : 0;
-
-    fileResult.relevanceScore = maxSimilarity * 0.6 + avgSimilarity * 0.4;
-    // Keep only top chunks per file
-    fileResult.topChunks = fileResult.topChunks.slice(0, 3);
+    const topSlice = fileResult.topChunks.slice(0, 5);
+    const maxSim = topSlice[0]?.similarity ?? 0;
+    const avgSim =
+      topSlice.length > 0 ? topSlice.reduce((s, c) => s + c.similarity, 0) / topSlice.length : 0;
+    fileResult.relevanceScore = maxSim * 0.6 + avgSim * 0.4;
   }
 
-  // Sort files by relevance score and return top K
   return Array.from(fileMap.values())
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
     .slice(0, topK);
+};
+
+/**
+ * Reciprocal Rank Fusion — merges vector and BM25 ranked lists without needing score calibration.
+ * k=60 is the standard constant from the original RRF paper.
+ */
+const reciprocalRankFusion = <T extends { id: string }>(
+  vectorResults: T[],
+  bm25Results: { id: string }[],
+  k = 60,
+): T[] => {
+  const scores = new Map<string, number>();
+  const itemById = new Map<string, T>();
+
+  for (const [rank, item] of vectorResults.entries()) {
+    scores.set(item.id, (scores.get(item.id) ?? 0) + 1 / (k + rank + 1));
+    itemById.set(item.id, item);
+  }
+
+  for (const [rank, item] of bm25Results.entries()) {
+    scores.set(item.id, (scores.get(item.id) ?? 0) + 1 / (k + rank + 1));
+  }
+
+  return [...scores.entries()]
+    .sort(([, a], [, b]) => b - a)
+    .map(([id]) => itemById.get(id))
+    .filter(Boolean) as T[];
 };
 
 export const chunkRouter = router({
@@ -219,23 +241,21 @@ export const chunkRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { model, provider } =
-        getServerDefaultFilesConfig().embeddingModel || DEFAULT_FILE_EMBEDDING_MODEL_ITEM;
-      // Read user's provider config from database
+      const filesConfig = getServerDefaultFilesConfig();
+      const { model, provider, dimensions } =
+        filesConfig.embeddingModel || DEFAULT_FILE_EMBEDDING_MODEL_ITEM;
+      const embeddingDimensions = dimensions ?? 1024;
       const agentRuntime = await initModelRuntimeFromDB(ctx.serverDB, ctx.userId, provider);
 
-      const embeddings = await agentRuntime.embeddings(
-        {
-          dimensions: 1024,
-          input: input.query,
-          model,
-        },
+      const embeddingVectors = await agentRuntime.embeddings(
+        { dimensions: embeddingDimensions, input: input.query, model },
         { metadata: { trigger: RequestTrigger.SemanticSearch }, user: ctx.userId },
       );
 
       return ctx.chunkModel.semanticSearch({
-        embedding: embeddings![0],
+        embedding: embeddingVectors![0],
         fileIds: input.fileIds,
+        minSimilarity: filesConfig.minSimilarity,
         query: input.query,
       });
     }),
@@ -244,24 +264,27 @@ export const chunkRouter = router({
     .input(SemanticSearchSchema)
     .mutation(async ({ ctx, input }) => {
       try {
-        const { model, provider } =
-          getServerDefaultFilesConfig().embeddingModel || DEFAULT_FILE_EMBEDDING_MODEL_ITEM;
-        // Read user's provider config from database
+        const filesConfig = getServerDefaultFilesConfig();
+        const { model, provider, dimensions } =
+          filesConfig.embeddingModel || DEFAULT_FILE_EMBEDDING_MODEL_ITEM;
+
+        const embeddingDimensions = dimensions ?? 1024;
+        const finalTopK = input.topK ?? 15;
+        const candidatePoolSize = filesConfig.candidatePoolSize ?? 60;
+        const minSimilarity = filesConfig.minSimilarity ?? 0;
+        const queryMode = filesConfig.queryMode ?? 'hybrid';
+
         const modelRuntime = await initModelRuntimeFromDB(ctx.serverDB, ctx.userId, provider);
 
-        // slice content to make sure in the context window limit
-        const query = input.query.length > 8000 ? input.query.slice(0, 8000) : input.query;
+        // Prefer the tail of a long query (most recent user turn is most relevant)
+        const query = input.query.length > 8000 ? input.query.slice(-8000) : input.query;
 
-        const embeddings = await modelRuntime.embeddings(
-          {
-            dimensions: 1024,
-            input: query,
-            model,
-          },
+        const embeddingVectors = await modelRuntime.embeddings(
+          { dimensions: embeddingDimensions, input: query, model },
           { metadata: { trigger: RequestTrigger.SemanticSearch }, user: ctx.userId },
         );
 
-        const embedding = embeddings![0];
+        const embedding = embeddingVectors![0];
 
         let finalFileIds = input.fileIds ?? [];
 
@@ -269,21 +292,75 @@ export const chunkRouter = router({
           const knowledgeFiles = await ctx.serverDB.query.knowledgeBaseFiles.findMany({
             where: inArray(knowledgeBaseFiles.knowledgeBaseId, input.knowledgeIds),
           });
-
           finalFileIds = knowledgeFiles.map((f) => f.fileId).concat(finalFileIds);
         }
 
-        const chunks = await ctx.chunkModel.semanticSearchForChat({
-          embedding,
-          fileIds: finalFileIds,
-          query: input.query,
-          topK: input.topK,
-        });
+        // Fetch wide candidate pool; run BM25 in parallel when hybrid mode is active
+        const [vectorChunks, bm25Chunks] = await Promise.all([
+          ctx.chunkModel.semanticSearchForChat({
+            embedding,
+            fileIds: finalFileIds,
+            minSimilarity,
+            query,
+            topK: candidatePoolSize,
+          }),
+          queryMode === 'hybrid' || queryMode === 'full_text'
+            ? ctx.chunkModel.bm25SearchForChat({
+                fileIds: finalFileIds,
+                query,
+                topK: candidatePoolSize,
+              })
+            : Promise.resolve([]),
+        ]);
 
-        // Group chunks by file and calculate relevance scores
-        const fileResults = groupAndRankFiles(chunks, input.topK || 15);
+        // RRF fusion merges vector and BM25 ranked lists
+        let mergedChunks = vectorChunks;
+        if (bm25Chunks.length > 0) {
+          mergedChunks = reciprocalRankFusion(vectorChunks, bm25Chunks);
+        }
 
-        // TODO: need to rerank the chunks
+        // Rerank merged candidates if a reranker is configured
+        const rerankConfig = filesConfig.rerankerModel || DEFAULT_FILE_RERANK_MODEL_ITEM;
+        const rerankTopK = filesConfig.rerankTopK ?? finalTopK;
+        let chunks = mergedChunks;
+
+        if (rerankConfig?.model && rerankConfig?.provider && mergedChunks.length > rerankTopK) {
+          try {
+            const rerankRuntime = await initModelRuntimeFromDB(
+              ctx.serverDB,
+              ctx.userId,
+              rerankConfig.provider,
+            );
+            const rerankResults = await rerankRuntime.rerank?.(
+              {
+                documents: mergedChunks.map((c) => c.text ?? ''),
+                model: rerankConfig.model,
+                query,
+                topN: rerankTopK,
+              },
+              { user: ctx.userId },
+            );
+
+            if (rerankResults && rerankResults.length > 0) {
+              chunks = rerankResults.map((r) => mergedChunks[r.index]).filter(Boolean);
+            } else {
+              chunks = mergedChunks.slice(0, rerankTopK);
+            }
+          } catch {
+            // Rerank failure is non-fatal — fall back to RRF-ordered candidates
+            chunks = mergedChunks.slice(0, rerankTopK);
+          }
+        } else {
+          chunks = mergedChunks.slice(0, finalTopK);
+        }
+
+        // Post-filter by similarity threshold after reranking
+        if (minSimilarity > 0) {
+          const filtered = chunks.filter((c) => (c.similarity ?? 0) >= minSimilarity);
+          if (filtered.length > 0) chunks = filtered;
+        }
+
+        const fileResults = groupAndRankFiles(chunks, finalTopK);
 
         return { chunks, fileResults };
       } catch (e) {
@@ -292,7 +369,6 @@ export const chunkRouter = router({
         const error = e as any;
         const errorType = error.errorType;
 
-        // Map business error types to appropriate HTTP status codes
         if (errorType === 'InvalidProviderAPIKey') {
           throw new TRPCError({
             code: 'METHOD_NOT_SUPPORTED',
@@ -307,7 +383,6 @@ export const chunkRouter = router({
           });
         }
 
-        // For unknown errors, still return 500 but with proper message
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: error.message || errorType || 'Failed to perform semantic search',

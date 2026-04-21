@@ -58,7 +58,9 @@ const ActionToolbar = memo<ActionToolbarProps>(
     const enableRichRender = useUserStore(labPreferSelectors.enableInputMarkdown);
 
     const leftActions = useChatInputStore((s) =>
-      s.leftActions.filter((item) => (enableRichRender ? true : item !== 'typo')),
+      s.leftActions.filter(
+        (item) => item != 'search' && (enableRichRender ? true : item !== 'typo'),
+      ),
     );
 
     const mobile = useChatInputStore((s) => s.mobile);

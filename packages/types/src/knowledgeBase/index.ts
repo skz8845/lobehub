@@ -48,7 +48,10 @@ export interface KnowledgeItem {
 }
 
 export interface SystemEmbeddingConfig {
+  candidatePoolSize?: number;
   embeddingModel: FilesConfigItem;
+  minSimilarity?: number;
   queryMode: string;
   rerankerModel: FilesConfigItem;
+  rerankTopK?: number;
 }

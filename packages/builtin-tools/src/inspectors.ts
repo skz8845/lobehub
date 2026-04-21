@@ -19,6 +19,10 @@ import {
   CloudSandboxInspectors,
 } from '@lobechat/builtin-tool-cloud-sandbox/client';
 import {
+  CveAnalyzerInspectors,
+  CveAnalyzerManifest,
+} from '@lobechat/builtin-tool-cve-analyzer/client';
+import {
   GroupAgentBuilderInspectors,
   GroupAgentBuilderManifest,
 } from '@lobechat/builtin-tool-group-agent-builder/client';
@@ -73,6 +77,7 @@ const BuiltinToolInspectors: Record<string, Record<string, BuiltinInspector>> = 
     string,
     BuiltinInspector
   >,
+  [CveAnalyzerManifest.identifier]: CveAnalyzerInspectors as Record<string, BuiltinInspector>,
   [GTDManifest.identifier]: GTDInspectors as Record<string, BuiltinInspector>,
   [KnowledgeBaseManifest.identifier]: KnowledgeBaseInspectors as Record<string, BuiltinInspector>,
   [LocalSystemManifest.identifier]: LocalSystemInspectors as Record<string, BuiltinInspector>,

@@ -169,6 +169,59 @@ function createDocuments(
   });
 }
 
+/**
+ * Extract the heading breadcrumb hierarchy at a given position in the original text.
+ * Returns lines like ["# H1", "## H2", "### H3"] representing the current context.
+ */
+function extractHeadingContext(fullText: string, position: number): string[] {
+  const textBefore = fullText.slice(0, position);
+  const lines = textBefore.split('\n');
+  const stack: { level: number; text: string }[] = [];
+
+  for (const line of lines) {
+    const match = line.match(/^(#{1,6})\s+(.+)/);
+    if (match) {
+      const level = match[1].length;
+      while (stack.length > 0 && stack.at(-1)!.level >= level) {
+        stack.pop();
+      }
+      stack.push({ level, text: line.trim() });
+    }
+  }
+
+  return stack.map((h) => h.text);
+}
+
+/**
+ * Injects heading breadcrumb context into each markdown chunk so that
+ * the embedding captures the document hierarchy even for deeply nested sections.
+ */
+function addHeadingContextToChunks(chunks: DocumentChunk[], fullText: string): DocumentChunk[] {
+  let searchFrom = 0;
+
+  return chunks.map((chunk) => {
+    const pos = fullText.indexOf(chunk.pageContent, searchFrom);
+    if (pos === -1) return chunk;
+
+    searchFrom = pos + 1;
+    const headings = extractHeadingContext(fullText, pos);
+
+    if (headings.length === 0) return chunk;
+
+    // Avoid repeating the heading if chunk already starts with it
+    const firstHeading = headings.at(-1)!;
+    const chunkStartsWithHeading = chunk.pageContent.trimStart().startsWith('#');
+    if (chunkStartsWithHeading && chunk.pageContent.trimStart().startsWith(firstHeading)) {
+      return chunk;
+    }
+
+    return {
+      ...chunk,
+      pageContent: `${headings.join('\n')}\n\n${chunk.pageContent}`,
+    };
+  });
+}
+
 // --- Public API ---
 
 export function splitText(text: string, config: SplitterConfig): DocumentChunk[] {
@@ -176,7 +229,8 @@ export function splitText(text: string, config: SplitterConfig): DocumentChunk[]
 }
 
 export function splitMarkdown(text: string, config: SplitterConfig): DocumentChunk[] {
-  return createDocuments(text, MARKDOWN_SEPARATORS, config);
+  const rawChunks = createDocuments(text, MARKDOWN_SEPARATORS, config);
+  return addHeadingContextToChunks(rawChunks, text);
 }
 
 export function splitLatex(text: string, config: SplitterConfig): DocumentChunk[] {

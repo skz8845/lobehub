@@ -1,20 +1,20 @@
-import { SOCIAL_URL } from '@lobechat/business-const';
-import { DiscordIcon, GithubIcon } from '@lobehub/ui/icons';
+// import { SOCIAL_URL } from '@lobechat/business-const';
+// import { DiscordIcon, GithubIcon } from '@lobehub/ui/icons';
 import { Command } from 'cmdk';
 import {
   Bot,
-  FeatherIcon,
+  // FeatherIcon,
   FilePen,
   LibraryBig,
   MessageSquarePlusIcon,
   Monitor,
-  Star,
+  // Star,
 } from 'lucide-react';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { getNavigableRoutes, getRouteById } from '@/config/routes';
-import { FEEDBACK } from '@/const/url';
+// import { FEEDBACK } from '@/const/url';
 import { useFeedbackModal } from '@/hooks/useFeedbackModal';
 
 import { useCommandMenuContext } from './CommandMenuContext';
@@ -51,14 +51,14 @@ const MainMenu = memo(() => {
           {t('cmdk.newAgent')}
         </CommandItem>
 
-        <CommandItem
+        {/*<CommandItem
           icon={<Bot />}
           unpinned={menuContext === 'agent' || menuContext === 'page'}
           value="create new agent team"
           onSelect={handleCreateAgentTeam}
         >
           {t('cmdk.newAgentTeam')}
-        </CommandItem>
+        </CommandItem>*/}
 
         {menuContext === 'agent' && (
           <CommandItem
@@ -134,7 +134,7 @@ const MainMenu = memo(() => {
         })}
       </Command.Group>
 
-      <Command.Group heading={t('cmdk.about')}>
+      {/*<Command.Group heading={t('cmdk.about')}>
         <CommandItem
           icon={<FeatherIcon />}
           keywords={t('cmdk.keywords.contactUs').split(' ')}
@@ -167,7 +167,7 @@ const MainMenu = memo(() => {
         >
           {t('cmdk.communitySupport')}
         </CommandItem>
-      </Command.Group>
+      </Command.Group>*/}
     </>
   );
 });

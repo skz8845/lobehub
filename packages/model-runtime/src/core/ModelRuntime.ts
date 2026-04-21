@@ -16,6 +16,8 @@ import type {
   ModelRequestOptions,
   OnFinishData,
   PullModelParams,
+  RerankOptions,
+  RerankPayload,
   TextToSpeechPayload,
 } from '../types';
 import { AgentRuntimeErrorType } from '../types/error';
@@ -250,6 +252,10 @@ export class ModelRuntime {
       throw error;
     }
   }
+  async rerank(payload: RerankPayload, options?: RerankOptions) {
+    return this._runtime.rerank?.(payload, options);
+  }
+
   async textToSpeech(payload: TextToSpeechPayload, options?: EmbeddingsOptions) {
     return this._runtime.textToSpeech?.(payload, options);
   }
