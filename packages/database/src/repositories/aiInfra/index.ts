@@ -6,7 +6,6 @@ import type {
   EnabledProvider,
   ProviderConfig,
 } from '@lobechat/types';
-import { isEmpty } from 'es-toolkit/compat';
 import type { AIChatModelCard, AiProviderModelListItem, EnabledAiModel } from 'model-bank';
 import { AiModelSourceEnum } from 'model-bank';
 import * as modelBank from 'model-bank';
@@ -144,22 +143,18 @@ export class AiInfraRepos {
    * Calculate the final providerList based on the known providerConfig
    */
   getAiProviderList = async () => {
-    const userProviders = await this.aiProviderModel.getAiProviderList();
-
     // 1. First create a mapping based on DEFAULT_MODEL_PROVIDER_LIST id order
     const orderMap = new Map(DEFAULT_MODEL_PROVIDER_LIST.map((item, index) => [item.id, index]));
 
     const builtinProviders = DEFAULT_MODEL_PROVIDER_LIST.map((item) => ({
       description: item.description,
-      enabled:
-        userProviders.some((provider) => provider.id === item.id && provider.enabled) ||
-        this.providerConfigs[item.id]?.enabled,
+      enabled: true,
       id: item.id,
       name: item.name,
       source: 'builtin',
     })) as AiProviderListItem[];
 
-    const mergedProviders = mergeArrayById(builtinProviders, userProviders);
+    const mergedProviders = mergeArrayById(builtinProviders, []);
 
     // 3. Sort based on orderMap
     return mergedProviders.sort((a, b) => {
@@ -203,35 +198,35 @@ export class AiInfraRepos {
         const aiModels = await this.fetchBuiltinModels(provider.id);
         return (aiModels || [])
           .map<EnabledAiModel & { enabled?: boolean | null }>((item) => {
-            const user = allModels.find((m) => m.id === item.id && m.providerId === provider.id);
+            // const user = allModels.find((m) => m.id === item.id && m.providerId === provider.id);
 
             // User hasn't modified local model
-            if (!user)
-              return injectSearchSettings(provider.id, {
-                ...item,
-                abilities: item.abilities || {},
-                providerId: provider.id,
-              });
-
-            const mergedModel = {
+            // if (!user)
+            return injectSearchSettings(provider.id, {
               ...item,
-              abilities: !isEmpty(user.abilities) ? user.abilities : item.abilities || {},
-              config: !isEmpty(user.config) ? user.config : item.config,
-              contextWindowTokens:
-                typeof user.contextWindowTokens === 'number'
-                  ? user.contextWindowTokens
-                  : item.contextWindowTokens,
-              displayName: user?.displayName || item.displayName,
-              enabled: typeof user.enabled === 'boolean' ? user.enabled : item.enabled,
-              id: item.id,
+              abilities: item.abilities || {},
               providerId: provider.id,
-              settings: isEmpty(user.settings)
-                ? item.settings
-                : merge(item.settings || {}, user.settings || {}),
-              sort: user.sort ?? undefined,
-              type: user.type || item.type,
-            };
-            return injectSearchSettings(provider.id, mergedModel); // User modified local model, check search settings
+            });
+
+            // const mergedModel = {
+            //   ...item,
+            //   abilities: !isEmpty(user.abilities) ? user.abilities : item.abilities || {},
+            //   config: !isEmpty(user.config) ? user.config : item.config,
+            //   contextWindowTokens:
+            //     typeof user.contextWindowTokens === 'number'
+            //       ? user.contextWindowTokens
+            //       : item.contextWindowTokens,
+            //   displayName: user?.displayName || item.displayName,
+            //   enabled: typeof user.enabled === 'boolean' ? user.enabled : item.enabled,
+            //   id: item.id,
+            //   providerId: provider.id,
+            //   settings: isEmpty(user.settings)
+            //     ? item.settings
+            //     : merge(item.settings || {}, user.settings || {}),
+            //   sort: user.sort ?? undefined,
+            //   type: user.type || item.type,
+            // };
+            // return injectSearchSettings(provider.id, mergedModel); // User modified local model, check search settings
           })
           .filter((item) => (filterEnabled ? item.enabled : true));
       },

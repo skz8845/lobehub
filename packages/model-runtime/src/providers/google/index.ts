@@ -1,10 +1,10 @@
-import { GoogleGenAI } from '@google/genai';
 import type {
   GenerateContentConfig,
   HttpOptions,
   ThinkingConfig,
   Tool as GoogleFunctionCallTool,
 } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import debug from 'debug';
 
 import { type LobeRuntimeAI } from '../../core/BaseAI';

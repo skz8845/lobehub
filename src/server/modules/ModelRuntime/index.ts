@@ -187,7 +187,7 @@ const getParamsFromPayload = (provider: string, payload: ClientSecretPayload) =>
 
     case ModelProvider.Ollama: {
       const baseURL = payload?.baseURL || process.env.OLLAMA_PROXY_URL;
-      const apiKey = payload?.baseURL || process.env.OLLAMA_API_KEY;
+      const apiKey = payload?.apiKey || process.env.OLLAMA_API_KEY;
 
       return { baseURL, apiKey };
     }

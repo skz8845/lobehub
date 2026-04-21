@@ -707,43 +707,6 @@ const googleChatModels: AIChatModelCard[] = [
     },
     type: 'chat',
   },
-  {
-    abilities: {
-      functionCall: true,
-      reasoning: false,
-      search: false,
-      structuredOutput: true,
-      vision: true,
-    },
-    contextWindowTokens: 262144,
-    description:
-      'Gemma 4 is a high-performing, efficient open model from Google built from the same technology used to create Gemini.',
-    displayName: 'gemma-4-e4b-it',
-    enabled: true,
-    id: 'gemma-4-e4b-it',
-    maxOutput: 65_535,
-    pricing: {
-      units: [
-        {
-          name: 'textInput',
-          strategy: 'fixed',
-          unit: 'millionTokens',
-          rate: 0,
-        },
-        {
-          name: 'textOutput',
-          strategy: 'fixed',
-          unit: 'millionTokens',
-          rate: 0,
-        },
-      ],
-    },
-    releasedAt: '2026-04-16',
-    settings: {
-      extendParams: [],
-    },
-    type: 'chat',
-  },
 ];
 
 // Common parameters for Imagen models

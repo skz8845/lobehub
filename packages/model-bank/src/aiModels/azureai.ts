@@ -105,7 +105,7 @@ const azureChatModels: AIChatModelCard[] = [
     contextWindowTokens: 1_047_576,
     description: 'GPT-4.1 mini balances intelligence, speed, and cost for many use cases.',
     displayName: 'GPT-4.1 mini',
-    enabled: true,
+    enabled: false,
     id: 'gpt-4.1-mini',
     maxOutput: 32_768,
     pricing: {

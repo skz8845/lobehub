@@ -61,7 +61,8 @@ export const getProviderAuthPayload = (
     }
 
     case ModelProvider.Ollama: {
-      return { baseURL: keyVaults?.baseURL };
+      const apiKey = keyVaults?.apiKey || process.env.OLLAMA_API_KEY;
+      return { baseURL: keyVaults?.baseURL, apiKey };
     }
 
     case ModelProvider.Cloudflare: {

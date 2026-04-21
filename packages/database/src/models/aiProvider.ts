@@ -8,9 +8,6 @@ import type {
 import { and, asc, desc, eq } from 'drizzle-orm';
 import { isEmpty } from 'es-toolkit/compat';
 import { ModelProvider } from 'model-bank';
-import { DEFAULT_MODEL_PROVIDER_LIST } from 'model-bank/modelProviders';
-
-import { merge } from '@/utils/merge';
 
 import type { AiProviderSelectItem } from '../schemas';
 import { aiModels, aiProviders } from '../schemas';
@@ -254,43 +251,9 @@ export class AiProviderModel {
     } as AiProviderDetailItem;
   };
 
+  // eslint-disable-next-line unused-imports/no-unused-vars
   getAiProviderRuntimeConfig = async (decryptor?: DecryptUserKeyVaults) => {
-    const result = await this.db
-      .select({
-        config: aiProviders.config,
-        fetchOnClient: aiProviders.fetchOnClient,
-        id: aiProviders.id,
-        keyVaults: aiProviders.keyVaults,
-        settings: aiProviders.settings,
-      })
-      .from(aiProviders)
-      .where(and(eq(aiProviders.userId, this.userId)));
-
-    const decrypt = decryptor ?? JSON.parse;
     const runtimeConfig: Record<string, AiProviderRuntimeConfig> = {};
-
-    for (const item of result) {
-      const builtin = DEFAULT_MODEL_PROVIDER_LIST.find((provider) => provider.id === item.id);
-
-      const userSettings = item.settings || {};
-
-      let keyVaults = {};
-      if (!!item.keyVaults) {
-        try {
-          keyVaults = await decrypt(item.keyVaults);
-        } catch {
-          /* empty */
-        }
-      }
-
-      runtimeConfig[item.id] = {
-        config: item.config || {},
-        fetchOnClient: typeof item.fetchOnClient === 'boolean' ? item.fetchOnClient : undefined,
-        keyVaults,
-        settings: !!builtin ? merge(builtin.settings, userSettings) : userSettings,
-      };
-    }
-
     return runtimeConfig;
   };
 
