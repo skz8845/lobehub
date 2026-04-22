@@ -2,7 +2,7 @@
 
 import { Flexbox } from '@lobehub/ui';
 import { BotPromptIcon } from '@lobehub/ui/icons';
-import { MessageSquarePlusIcon, RadioTowerIcon, SearchIcon } from 'lucide-react';
+import { MessageSquarePlusIcon, SearchIcon } from 'lucide-react';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
@@ -12,8 +12,8 @@ import NavItem from '@/features/NavPanel/components/NavItem';
 import { useQueryRoute } from '@/hooks/useQueryRoute';
 import { usePathname } from '@/libs/router/navigation';
 import { useActionSWR } from '@/libs/swr';
-import { useAgentStore } from '@/store/agent';
-import { agentSelectors } from '@/store/agent/selectors';
+// import { useAgentStore } from '@/store/agent';
+// import { agentSelectors } from '@/store/agent/selectors';
 import { useChatStore } from '@/store/chat';
 import { useGlobalStore } from '@/store/global';
 import { featureFlagsSelectors, useServerConfigStore } from '@/store/serverConfig';
@@ -29,9 +29,9 @@ const Nav = memo(() => {
   const router = useQueryRoute();
   const { isAgentEditable } = useServerConfigStore(featureFlagsSelectors);
   const toggleCommandMenu = useGlobalStore((s) => s.toggleCommandMenu);
-  const isHeterogeneousAgent = useAgentStore(agentSelectors.isCurrentAgentHeterogeneous);
+  // const isHeterogeneousAgent = useAgentStore(agentSelectors.isCurrentAgentHeterogeneous);
   const hideProfile = !isAgentEditable;
-  const hideChannel = hideProfile || isHeterogeneousAgent;
+  // const hideChannel = hideProfile || isHeterogeneousAgent;
   const switchTopic = useChatStore((s) => s.switchTopic);
   const [openNewTopicOrSaveTopic] = useChatStore((s) => [s.openNewTopicOrSaveTopic]);
 
@@ -62,7 +62,7 @@ const Nav = memo(() => {
           }}
         />
       )}
-      {!hideChannel && (
+      {/* {!hideChannel && (
         <NavItem
           active={isChannelActive}
           icon={RadioTowerIcon}
@@ -72,7 +72,7 @@ const Nav = memo(() => {
             router.push(urlJoin('/agent', agentId!, 'channel'));
           }}
         />
-      )}
+      )} */}
       <NavItem
         icon={SearchIcon}
         title={t('tab.search')}

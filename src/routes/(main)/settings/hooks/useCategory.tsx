@@ -2,8 +2,6 @@ import { isDesktop } from '@lobechat/const';
 import { Avatar } from '@lobehub/ui';
 import { SkillsIcon } from '@lobehub/ui/icons';
 import {
-  // BellIcon,
-  Brain,
   BrainCircuit,
   ChartColumnBigIcon,
   Coins,
@@ -12,13 +10,10 @@ import {
   EllipsisIcon,
   EthernetPort,
   Gift,
-  Info,
   KeyboardIcon,
   KeyIcon,
-  KeyRound,
   Map,
   PaletteIcon,
-  Sparkles,
   TerminalSquare,
 } from 'lucide-react';
 import { useMemo } from 'react';
@@ -84,7 +79,7 @@ export const useCategory = () => {
       {
         icon: avatarUrl ? <Avatar avatar={avatarUrl} shape={'square'} size={26} /> : undefined,
         key: SettingsTabs.Profile,
-        label: username ? username : tAuth('tab.profile'),
+        label: username || tAuth('tab.profile'),
       },
       {
         icon: ChartColumnBigIcon,
@@ -134,16 +129,16 @@ export const useCategory = () => {
 
     // Agent group
     const agentItems: CategoryItem[] = [
-      (!enableBusinessFeatures || isDevMode) && {
-        icon: Brain,
-        key: SettingsTabs.Provider,
-        label: t('tab.provider'),
-      },
-      {
-        icon: Sparkles,
-        key: SettingsTabs.ServiceModel,
-        label: t('tab.serviceModel'),
-      },
+      // (!enableBusinessFeatures || isDevMode) && {
+      //   icon: Brain,
+      //   key: SettingsTabs.Provider,
+      //   label: t('tab.provider'),
+      // },
+      // {
+      //   icon: Sparkles,
+      //   key: SettingsTabs.ServiceModel,
+      //   label: t('tab.serviceModel'),
+      // },
       {
         icon: SkillsIcon,
         key: SettingsTabs.Skill,
@@ -154,11 +149,11 @@ export const useCategory = () => {
         key: SettingsTabs.Memory,
         label: t('tab.memory'),
       },
-      {
-        icon: KeyRound,
-        key: SettingsTabs.Creds,
-        label: t('tab.creds'),
-      },
+      // {
+      //   icon: KeyRound,
+      //   key: SettingsTabs.Creds,
+      //   label: t('tab.creds'),
+      // },
       showApiKeyManage && {
         icon: KeyIcon,
         key: SettingsTabs.APIKey,
@@ -199,11 +194,11 @@ export const useCategory = () => {
         key: SettingsTabs.Advanced,
         label: t('tab.advanced'),
       },
-      !hideDocs && {
-        icon: Info,
-        key: SettingsTabs.About,
-        label: t('tab.about'),
-      },
+      // !hideDocs && {
+      //   icon: Info,
+      //   key: SettingsTabs.About,
+      //   label: t('tab.about'),
+      // },
     ].filter(Boolean) as CategoryItem[];
 
     groups.push({
@@ -218,7 +213,7 @@ export const useCategory = () => {
     tAuth,
     tSubscription,
     enableBusinessFeatures,
-    hideDocs,
+    // hideDocs,
     mobile,
     showApiKeyManage,
     isDevMode,

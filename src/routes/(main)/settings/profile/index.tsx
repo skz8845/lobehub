@@ -1,6 +1,5 @@
 'use client';
 
-import { isDesktop } from '@lobechat/const';
 import { Flexbox, FormGroup, Skeleton } from '@lobehub/ui';
 import { Divider } from 'antd';
 import { useEffect } from 'react';
@@ -15,14 +14,12 @@ import { useUserStore } from '@/store/user';
 import { authSelectors, userProfileSelectors } from '@/store/user/selectors';
 
 import AvatarRow from './features/AvatarRow';
-import EmailRow from './features/EmailRow';
+// import EmailRow from './features/EmailRow';
 import FullNameRow from './features/FullNameRow';
 import InterestsRow from './features/InterestsRow';
-import KlavisAuthorizationList from './features/KlavisAuthorizationList';
-import PasswordRow from './features/PasswordRow';
-import ProfileRow, { labelStyle, rowStyle } from './features/ProfileRow';
-import SSOProvidersList from './features/SSOProvidersList';
-import UsernameRow from './features/UsernameRow';
+// import PasswordRow from './features/PasswordRow';
+import { labelStyle, rowStyle } from './features/ProfileRow';
+// import UsernameRow from './features/UsernameRow';
 
 const SkeletonRow = ({ mobile }: { mobile?: boolean }) => {
   if (mobile) {
@@ -36,7 +33,11 @@ const SkeletonRow = ({ mobile }: { mobile?: boolean }) => {
   return (
     <Flexbox horizontal align="center" gap={24} style={rowStyle}>
       <Skeleton.Button active size="small" style={{ ...labelStyle, height: 22 }} />
-      <Skeleton.Button active size="small" style={{ height: 22, marginInlineStart: 'auto', width: 120 }} />
+      <Skeleton.Button
+        active
+        size="small"
+        style={{ height: 22, marginInlineStart: 'auto', width: 120 }}
+      />
     </Flexbox>
   );
 };
@@ -98,10 +99,10 @@ const ProfileSetting = ({ mobile }: ProfileSettingProps) => {
           {/* Full Name Row - Editable */}
           <FullNameRow mobile={mobile} />
 
-          <Divider style={{ margin: 0 }} />
+          {/* <Divider style={{ margin: 0 }} /> */}
 
           {/* Username Row - Editable */}
-          <UsernameRow mobile={mobile} />
+          {/* <UsernameRow mobile={mobile} /> */}
 
           <Divider style={{ margin: 0 }} />
 
@@ -109,40 +110,40 @@ const ProfileSetting = ({ mobile }: ProfileSettingProps) => {
           <InterestsRow mobile={mobile} />
 
           {/* Password Row - For logged in users to change or set password */}
-          {!isDesktop && isLogin && !disableEmailPassword && (
+          {/* {!isDesktop && isLogin && !disableEmailPassword && (
             <>
               <Divider style={{ margin: 0 }} />
               <PasswordRow mobile={mobile} />
             </>
-          )}
+          )} */}
 
           {/* Email Row - Editable */}
-          {isLogin && userProfile?.email && (
+          {/* {isLogin && userProfile?.email && (
             <>
               <Divider style={{ margin: 0 }} />
               <EmailRow mobile={mobile} />
             </>
-          )}
+          )} */}
 
           {/* SSO Providers Row */}
-          {isLogin && !isDesktop && (
+          {/* {isLogin && !isDesktop && (
             <>
               <Divider style={{ margin: 0 }} />
               <ProfileRow label={t('profile.sso.providers')} mobile={mobile}>
                 <SSOProvidersList />
               </ProfileRow>
             </>
-          )}
+          )} */}
 
           {/* Klavis Authorizations Row */}
-          {enableKlavis && connectedServers.length > 0 && (
+          {/* {enableKlavis && connectedServers.length > 0 && (
             <>
               <Divider style={{ margin: 0 }} />
               <ProfileRow label={t('profile.authorizations.title')} mobile={mobile}>
                 <KlavisAuthorizationList servers={connectedServers} />
               </ProfileRow>
             </>
-          )}
+          )} */}
         </Flexbox>
       </FormGroup>
     </>

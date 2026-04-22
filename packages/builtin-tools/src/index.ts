@@ -14,7 +14,7 @@ import { GTDManifest } from '@lobechat/builtin-tool-gtd';
 import { KnowledgeBaseManifest } from '@lobechat/builtin-tool-knowledge-base';
 import { LocalSystemManifest } from '@lobechat/builtin-tool-local-system';
 import { MemoryManifest } from '@lobechat/builtin-tool-memory';
-import { MessageManifest } from '@lobechat/builtin-tool-message';
+// import { MessageManifest } from '@lobechat/builtin-tool-message';
 import { PageAgentManifest } from '@lobechat/builtin-tool-page-agent';
 import { RemoteDeviceManifest } from '@lobechat/builtin-tool-remote-device';
 import { SkillStoreManifest } from '@lobechat/builtin-tool-skill-store';
@@ -207,11 +207,11 @@ export const builtinTools: LobeBuiltinTool[] = [
     manifest: CalculatorManifest,
     type: 'builtin',
   },
-  {
-    identifier: MessageManifest.identifier,
-    manifest: MessageManifest,
-    type: 'builtin',
-  },
+  // {
+  //   identifier: MessageManifest.identifier,
+  //   manifest: MessageManifest,
+  //   type: 'builtin',
+  // },
   {
     hidden: true,
     identifier: RemoteDeviceManifest.identifier,
