@@ -9,9 +9,9 @@ const log = debug('lobe-server:cve-analyzer');
 
 // ─── Milvus REST helpers ──────────────────────────────────────────────────────
 
-const DB_NAME = 'sec_dev';
-const COLLECTION = 'cve_info';
-const OUTPUT_FIELDS = ['cve_id', 'cnnvd_id', 'description', 'product_info', 'solutions'];
+const DB_NAME = process.env.CVE_MILVUS_DB_NAME || 'sec_dev';
+const COLLECTION = process.env.CVE_MILVUS_COLLECTION_NAME || 'cve_info';
+const OUTPUT_FIELDS = ['cve_id', 'cnnvd_id', 'description', 'product_info', 'solution'];
 
 function milvusUrl() {
   const base = process.env.CVE_MILVUS_URL ?? 'http://localhost:19530';
@@ -85,7 +85,7 @@ async function milvusVectorSearch(vector: number[], limit: number, filterExpr?: 
     throw new Error(`Milvus search failed: ${res.status}`);
   }
   const json = await res.json();
-  const data = (json.data?.[0] ?? []) as Array<Record<string, any> & { distance: number }>;
+  const data = (json.data ?? []) as Array<Record<string, any> & { distance: number }>;
   log('Milvus vector search returned %d results', data.length);
   return data;
 }
@@ -182,7 +182,7 @@ function formatRecords(records: Record<string, any>[]) {
         `### ${id}`,
         r.description ? `**描述:** ${r.description}` : '',
         r.product_info ? `**受影响产品:** ${r.product_info}` : '',
-        r.solutions ? `**修复建议:** ${r.solutions}` : '',
+        r.solution ? `**修复建议:** ${r.solution}` : '',
         score,
       ]
         .filter(Boolean)
@@ -194,45 +194,45 @@ function formatRecords(records: Record<string, any>[]) {
 // ─── Runtime factory ──────────────────────────────────────────────────────────
 
 const createCveRuntime = () => ({
-  getStats: async (args: { groupByYear?: boolean; product?: string; year?: string }) => {
-    log('getStats called with args: %O', args);
-    try {
-      if (args.groupByYear) {
-        log('Grouping stats by year');
-        const years = ['2021', '2022', '2023', '2024', '2025'];
-        const counts = await Promise.all(years.map((y) => milvusCount(`cve_id like "CVE-${y}-%"`)));
-        const rows = years.map((y, i) => `| ${y} | ${counts[i].toLocaleString()} |`).join('\n');
-        log('Year-based stats completed');
-        return {
-          content: `## 漏洞数量统计（按年度）\n\n| 年份 | 数量 |\n|------|------|\n${rows}`,
-          success: true,
-        };
-      }
+  // getStats: async (args: { groupByYear?: boolean; product?: string; year?: string }) => {
+  //   log('getStats called with args: %O', args);
+  //   try {
+  //     if (args.groupByYear) {
+  //       log('Grouping stats by year');
+  //       const years = ['2021', '2022', '2023', '2024', '2025'];
+  //       const counts = await Promise.all(years.map((y) => milvusCount(`cve_id like "CVE-${y}-%"`)));
+  //       const rows = years.map((y, i) => `| ${y} | ${counts[i].toLocaleString()} |`).join('\n');
+  //       log('Year-based stats completed');
+  //       return {
+  //         content: `## 漏洞数量统计（按年度）\n\n| 年份 | 数量 |\n|------|------|\n${rows}`,
+  //         success: true,
+  //       };
+  //     }
 
-      const parts: string[] = [];
-      if (args.year) parts.push(`cve_id like "CVE-${args.year}-%"`);
-      if (args.product) parts.push(`product_info like "%${args.product}%"`);
-      const filter = parts.join(' and ');
+  //     const parts: string[] = [];
+  //     if (args.year) parts.push(`cve_id like "CVE-${args.year}-%"`);
+  //     if (args.product) parts.push(`product_info like "%${args.product}%"`);
+  //     const filter = parts.join(' and ');
 
-      log('Filter expression: %s', filter || '(empty)');
-      const count = await milvusCount(filter);
-      const desc = [
-        args.year ? `年份: ${args.year}` : '',
-        args.product ? `产品: ${args.product}` : '',
-      ]
-        .filter(Boolean)
-        .join(', ');
+  //     log('Filter expression: %s', filter || '(empty)');
+  //     const count = await milvusCount(filter);
+  //     const desc = [
+  //       args.year ? `年份: ${args.year}` : '',
+  //       args.product ? `产品: ${args.product}` : '',
+  //     ]
+  //       .filter(Boolean)
+  //       .join(', ');
 
-      log('Stats result - count: %d, description: %s', count, desc);
-      return {
-        content: `漏洞数量${desc ? `（${desc}）` : ''}: **${count.toLocaleString()}** 条`,
-        success: true,
-      };
-    } catch (e) {
-      log('getStats error: %O', e);
-      return { content: `查询统计失败: ${(e as Error).message}`, success: false };
-    }
-  },
+  //     log('Stats result - count: %d, description: %s', count, desc);
+  //     return {
+  //       content: `漏洞数量${desc ? `（${desc}）` : ''}: **${count.toLocaleString()}** 条`,
+  //       success: true,
+  //     };
+  //   } catch (e) {
+  //     log('getStats error: %O', e);
+  //     return { content: `查询统计失败: ${(e as Error).message}`, success: false };
+  //   }
+  // },
 
   lookupVulnerability: async (args: { ids: string[] }) => {
     log('lookupVulnerability called with ids: %O', args.ids);
@@ -261,7 +261,7 @@ const createCveRuntime = () => ({
         cve_id: r.cve_id as string | undefined,
         description: r.description as string | undefined,
         product_info: r.product_info as string | undefined,
-        solutions: r.solutions as string | undefined,
+        solution: r.solution as string | undefined,
       }));
       return {
         content: formatRecords(rawRecords),
@@ -275,13 +275,8 @@ const createCveRuntime = () => ({
     }
   },
 
-  searchVulnerability: async (args: { product?: string; query: string; topK?: number }) => {
-    log(
-      'searchVulnerability called - query: %s, product: %s, topK: %d',
-      args.query,
-      args.product || '(none)',
-      args.topK ?? 10,
-    );
+  searchVulnerability: async (args: { query: string; topK?: number }) => {
+    log('searchVulnerability called - query: %s, topK: %d', args.query, args.topK ?? 10);
     const filesConfig = getServerDefaultFilesConfig();
     const candidatePoolSize = filesConfig.candidatePoolSize ?? 60;
     const rerankTopK = filesConfig.rerankTopK ?? 15;
@@ -300,9 +295,7 @@ const createCveRuntime = () => ({
       const vector = await generateEmbedding(args.query);
 
       // 2. Vector search in Milvus
-      const filterExpr = args.product ? `product_info like "%${args.product}%"` : undefined;
-      log('Step 2: Vector search with filter: %s', filterExpr || '(none)');
-      const candidates = await milvusVectorSearch(vector, candidatePoolSize, filterExpr);
+      const candidates = await milvusVectorSearch(vector, candidatePoolSize, undefined);
 
       if (candidates.length === 0) {
         log('No candidates found, returning early');
@@ -351,7 +344,7 @@ const createCveRuntime = () => ({
         description: r.description as string | undefined,
         product_info: r.product_info as string | undefined,
         relevanceScore: r.relevanceScore,
-        solutions: r.solutions as string | undefined,
+        solution: r.solution as string | undefined,
       }));
       return {
         content: formatRecords(final),
