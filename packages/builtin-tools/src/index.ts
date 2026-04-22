@@ -17,7 +17,7 @@ import { MemoryManifest } from '@lobechat/builtin-tool-memory';
 // import { MessageManifest } from '@lobechat/builtin-tool-message';
 import { PageAgentManifest } from '@lobechat/builtin-tool-page-agent';
 import { RemoteDeviceManifest } from '@lobechat/builtin-tool-remote-device';
-import { SkillStoreManifest } from '@lobechat/builtin-tool-skill-store';
+// import { SkillStoreManifest } from '@lobechat/builtin-tool-skill-store';
 import { SkillsManifest } from '@lobechat/builtin-tool-skills';
 import { TaskManifest } from '@lobechat/builtin-tool-task';
 import { TopicReferenceManifest } from '@lobechat/builtin-tool-topic-reference';
@@ -34,7 +34,7 @@ import { type LobeBuiltinTool } from '@lobechat/types';
 export const defaultToolIds = [
   LobeActivatorManifest.identifier,
   SkillsManifest.identifier,
-  SkillStoreManifest.identifier,
+  // SkillStoreManifest.identifier,
   // WebBrowsingManifest.identifier,
   KnowledgeBaseManifest.identifier,
   MemoryManifest.identifier,
@@ -53,7 +53,7 @@ export const defaultToolIds = [
 export const alwaysOnToolIds = [
   LobeActivatorManifest.identifier,
   SkillsManifest.identifier,
-  SkillStoreManifest.identifier,
+  // SkillStoreManifest.identifier,
 ];
 
 /**
@@ -63,7 +63,7 @@ export const alwaysOnToolIds = [
  */
 export const manualModeExcludeToolIds = [
   LobeActivatorManifest.identifier,
-  SkillStoreManifest.identifier,
+  // SkillStoreManifest.identifier,
 ];
 
 /**
@@ -105,12 +105,12 @@ export const builtinTools: LobeBuiltinTool[] = [
     manifest: SkillsManifest,
     type: 'builtin',
   },
-  {
-    hidden: true,
-    identifier: SkillStoreManifest.identifier,
-    manifest: SkillStoreManifest,
-    type: 'builtin',
-  },
+  // {
+  //   hidden: true,
+  //   identifier: SkillStoreManifest.identifier,
+  //   manifest: SkillStoreManifest,
+  //   type: 'builtin',
+  // },
   {
     discoverable: isDesktop,
     hidden: true,

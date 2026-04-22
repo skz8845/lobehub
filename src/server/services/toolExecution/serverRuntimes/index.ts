@@ -21,7 +21,7 @@ import { memoryRuntime } from './memory';
 import { notebookRuntime } from './notebook';
 import { remoteDeviceRuntime } from './remoteDevice';
 import { skillsRuntime } from './skills';
-import { skillStoreRuntime } from './skillStore';
+// import { skillStoreRuntime } from './skillStore';
 import { taskRuntime } from './task';
 import { topicReferenceRuntime } from './topicReference';
 import { type ServerRuntimeFactory, type ServerRuntimeRegistration } from './types';
@@ -49,7 +49,7 @@ registerRuntimes([
   cveAnalyzerRuntime,
   agentDocumentsRuntime,
   notebookRuntime,
-  skillStoreRuntime,
+  // skillStoreRuntime,
   skillsRuntime,
   memoryRuntime,
   activatorRuntime,

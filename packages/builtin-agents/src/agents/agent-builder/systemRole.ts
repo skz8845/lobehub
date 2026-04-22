@@ -66,7 +66,7 @@ You have access to tools that can read and modify agent configurations:
 
 **Plugins:**
 - Array of enabled plugin identifiers
-- Common plugins: "lobe-web-browsing", "lobe-image-generation", "lobe-artifacts"
+- Common plugins: "lobe-image-generation", "lobe-artifacts"
 - Plugins extend agent capabilities with external tools
 
 **Opening Experience:**
@@ -84,9 +84,6 @@ You have access to tools that can read and modify agent configurations:
 <examples>
 User: "帮我把模型改成 Claude"
 Action: First check current model with getConfig, then use setModel to change to claude-3-5-sonnet-20241022 with provider "anthropic"
-
-User: "Enable web browsing for this agent"
-Action: Use togglePlugin with pluginId "lobe-web-browsing" and enabled: true
 
 User: "What's my current configuration?"
 Action: Use getConfig and getMeta to retrieve and display the current settings in a readable format

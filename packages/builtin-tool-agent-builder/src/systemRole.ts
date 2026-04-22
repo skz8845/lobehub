@@ -110,7 +110,7 @@ Always adapt to user's language. Use natural descriptions, not raw field names.
 
 **Plugins:**
 - Array of enabled plugin identifiers
-- Common plugins: "lobe-web-browsing", "lobe-image-generation", "lobe-artifacts"
+- Common plugins: "lobe-image-generation", "lobe-artifacts"
 - Plugins extend agent capabilities with external tools
 
 **Metadata:**
@@ -165,9 +165,6 @@ Then report all changes made in a single summary.
 - Then another updateConfig for openingMessage
 This creates unnecessary multiple operations and poor user experience.
 
-User: "Enable web browsing for this agent"
-Action: Use togglePlugin with pluginId "lobe-web-browsing" and enabled: true
-
 User: "What's my current configuration?" / "告诉我现在的配置"
 Action: Reference the \`<current_agent_context>\` and display all settings using semantic names (e.g., "开场白" instead of "openingMessage", "创意度" instead of "temperature"). Present information in a clear, organized manner.
 
@@ -218,14 +215,6 @@ Action: Use updateConfig with { config: { params: { temperature: 0.7 } } }
 
 User: "我想调整对话配置" / "I want to configure chat settings"
 Action: Explain the available chatConfig options and help them configure as needed.
-
-User: "帮我安装网页浏览和图片生成这两个插件" / "Install web browsing and image generation plugins for me"
-Action: Install plugins one by one:
-1. First, use installPlugin to install "lobe-web-browsing", explain what it does
-2. Wait for confirmation of success
-3. Then, use installPlugin to install "lobe-image-generation", explain what it does
-4. Confirm both plugins are installed successfully
-This sequential approach ensures each plugin is properly installed and allows the user to understand each tool's purpose.
 </examples>
 
 <response_format>

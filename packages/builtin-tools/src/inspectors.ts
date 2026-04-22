@@ -43,10 +43,10 @@ import { MemoryInspectors, MemoryManifest } from '@lobechat/builtin-tool-memory/
 // import { MessageInspectors, MessageManifest } from '@lobechat/builtin-tool-message/client';
 import { NotebookInspectors, NotebookManifest } from '@lobechat/builtin-tool-notebook/client';
 import { PageAgentInspectors, PageAgentManifest } from '@lobechat/builtin-tool-page-agent/client';
-import {
-  SkillStoreInspectors,
-  SkillStoreManifest,
-} from '@lobechat/builtin-tool-skill-store/client';
+// import {
+//   SkillStoreInspectors,
+//   SkillStoreManifest,
+// } from '@lobechat/builtin-tool-skill-store/client';
 import { SkillsInspectors, SkillsManifest } from '@lobechat/builtin-tool-skills/client';
 import {
   WebBrowsingInspectors,
@@ -88,7 +88,7 @@ const BuiltinToolInspectors: Record<string, Record<string, BuiltinInspector>> = 
   [LobeActivatorManifest.identifier]: LobeActivatorInspectors as Record<string, BuiltinInspector>,
   // @deprecated backward compat: old messages stored 'lobe-tools' as identifier
   ['lobe-tools']: LobeActivatorInspectors as Record<string, BuiltinInspector>,
-  [SkillStoreManifest.identifier]: SkillStoreInspectors as Record<string, BuiltinInspector>,
+  // [SkillStoreManifest.identifier]: SkillStoreInspectors as Record<string, BuiltinInspector>,
   [SkillsManifest.identifier]: SkillsInspectors as Record<string, BuiltinInspector>,
   [WebBrowsingManifest.identifier]: WebBrowsingInspectors as Record<string, BuiltinInspector>,
 };
