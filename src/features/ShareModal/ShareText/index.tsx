@@ -27,14 +27,14 @@ const ShareText = memo(() => {
   const { t } = useTranslation(['chat', 'common']);
   const { message } = App.useApp();
   const settings: FormItemProps[] = [
-    {
-      children: <Switch />,
-      label: t('shareModal.withSystemRole'),
-      layout: 'horizontal',
-      minWidth: undefined,
-      name: 'withSystemRole',
-      valuePropName: 'checked',
-    },
+    // {
+    //   children: <Switch />,
+    //   label: t('shareModal.withSystemRole'),
+    //   layout: 'horizontal',
+    //   minWidth: undefined,
+    //   name: 'withSystemRole',
+    //   valuePropName: 'checked',
+    // },
     {
       children: <Switch />,
       label: t('shareModal.withRole'),

@@ -1,6 +1,5 @@
 import { type FormItemProps } from '@lobehub/ui';
 import { Button, Flexbox, Form, Segmented } from '@lobehub/ui';
-import { Switch } from 'antd';
 import { CopyIcon } from 'lucide-react';
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +21,7 @@ const DEFAULT_FIELD_VALUE: FieldType = {
   imageType: ImageType.JPG,
   widthMode: WidthMode.Wide,
   withBackground: false,
-  withFooter: true,
+  withFooter: false,
   withPluginInfo: false,
   withSystemRole: false,
 };
@@ -51,22 +50,22 @@ const ShareImage = memo<{ mobile?: boolean }>(() => {
       minWidth: undefined,
       name: 'widthMode',
     },
-    {
-      children: <Switch />,
-      label: t('shareModal.withSystemRole'),
-      layout: 'horizontal',
-      minWidth: undefined,
-      name: 'withSystemRole',
-      valuePropName: 'checked',
-    },
-    {
-      children: <Switch />,
-      label: t('shareModal.withFooter'),
-      layout: 'horizontal',
-      minWidth: undefined,
-      name: 'withFooter',
-      valuePropName: 'checked',
-    },
+    // {
+    //   children: <Switch />,
+    //   label: t('shareModal.withSystemRole'),
+    //   layout: 'horizontal',
+    //   minWidth: undefined,
+    //   name: 'withSystemRole',
+    //   valuePropName: 'checked',
+    // },
+    // {
+    //   children: <Switch />,
+    //   label: t('shareModal.withFooter'),
+    //   layout: 'horizontal',
+    //   minWidth: undefined,
+    //   name: 'withFooter',
+    //   valuePropName: 'checked',
+    // },
     {
       children: <Segmented options={imageTypeOptions} />,
       label: t('shareModal.imageType'),

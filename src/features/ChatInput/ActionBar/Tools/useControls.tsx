@@ -12,7 +12,6 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useCheckPluginsIsInstalled } from '@/hooks/useCheckPluginsIsInstalled';
-import { useFetchInstalledPlugins } from '@/hooks/useFetchInstalledPlugins';
 import { useAgentStore } from '@/store/agent';
 import { agentByIdSelectors, chatConfigByIdSelectors } from '@/store/agent/selectors';
 import { serverConfigSelectors, useServerConfigStore } from '@/store/serverConfig';
@@ -75,27 +74,27 @@ export const useControls = ({ setUpdating }: { setUpdating: (updating: boolean) 
   const userAgentSkills = useToolStore(agentSkillsSelectors.getUserAgentSkills, isEqual);
 
   const [
-    useFetchUserKlavisServers,
-    useFetchLobehubSkillConnections,
+    // useFetchUserKlavisServers,
+    // useFetchLobehubSkillConnections,
     useFetchUninstalledBuiltinTools,
     useFetchAgentSkills,
   ] = useToolStore((s) => [
-    s.useFetchUserKlavisServers,
-    s.useFetchLobehubSkillConnections,
+    // s.useFetchUserKlavisServers,
+    // s.useFetchLobehubSkillConnections,
     s.useFetchUninstalledBuiltinTools,
     s.useFetchAgentSkills,
   ]);
 
-  useFetchInstalledPlugins();
+  // useFetchInstalledPlugins();
   useFetchUninstalledBuiltinTools(true);
   useFetchAgentSkills(true);
   useCheckPluginsIsInstalled(plugins);
 
   // Load user's Klavis integrations via SWR (from database)
-  useFetchUserKlavisServers(isKlavisEnabledInEnv);
+  // useFetchUserKlavisServers(isKlavisEnabledInEnv);
 
   // Load user's LobeHub Skill connections via SWR
-  useFetchLobehubSkillConnections(isLobehubSkillEnabled);
+  // useFetchLobehubSkillConnections(isLobehubSkillEnabled);
 
   // Get connected server by identifier
   const getServerByName = (identifier: string) => {
@@ -188,7 +187,7 @@ export const useControls = ({ setUpdating }: { setUpdating: (updating: boolean) 
             ),
           }))
         : [],
-    [isKlavisEnabledInEnv, allKlavisServers, installedKlavisIds, recommendedKlavisIds, agentId, t],
+    [isKlavisEnabledInEnv, installedKlavisIds, recommendedKlavisIds, agentId, getServerByName, t],
   );
 
   // LobeHub Skill Provider list items - only show installed or recommended
@@ -227,14 +226,7 @@ export const useControls = ({ setUpdating }: { setUpdating: (updating: boolean) 
             ),
           }))
         : [],
-    [
-      isLobehubSkillEnabled,
-      allLobehubSkillServers,
-      installedLobehubIds,
-      recommendedLobehubIds,
-      agentId,
-      t,
-    ],
+    [isLobehubSkillEnabled, installedLobehubIds, recommendedLobehubIds, agentId, t],
   );
 
   // Builtin tool list items (excluding Klavis and LobeHub Skill)

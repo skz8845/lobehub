@@ -13,10 +13,8 @@ import { CloudSandboxManifest } from '@lobechat/builtin-tool-cloud-sandbox';
 import { CloudSandboxRenders } from '@lobechat/builtin-tool-cloud-sandbox/client';
 import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
 import { CveAnalyzerRenders } from '@lobechat/builtin-tool-cve-analyzer/client';
-import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
-import { GroupAgentBuilderRenders } from '@lobechat/builtin-tool-group-agent-builder/client';
-import { GroupManagementManifest } from '@lobechat/builtin-tool-group-management';
-import { GroupManagementRenders } from '@lobechat/builtin-tool-group-management/client';
+// import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
+// import { GroupAgentBuilderRenders } from '@lobechat/builtin-tool-group-agent-builder/client';
 import { GTDManifest, GTDRenders } from '@lobechat/builtin-tool-gtd/client';
 import {
   KnowledgeBaseManifest,
@@ -48,8 +46,8 @@ const BuiltinToolsRenders: Record<string, Record<string, BuiltinRender>> = {
   [ClaudeCodeIdentifier]: ClaudeCodeRenders as Record<string, BuiltinRender>,
   [CloudSandboxManifest.identifier]: CloudSandboxRenders as Record<string, BuiltinRender>,
   [CveAnalyzerManifest.identifier]: CveAnalyzerRenders as Record<string, BuiltinRender>,
-  [GroupAgentBuilderManifest.identifier]: GroupAgentBuilderRenders as Record<string, BuiltinRender>,
-  [GroupManagementManifest.identifier]: GroupManagementRenders as Record<string, BuiltinRender>,
+  // [GroupAgentBuilderManifest.identifier]: GroupAgentBuilderRenders as Record<string, BuiltinRender>,
+  // [GroupManagementManifest.identifier]: GroupManagementRenders as Record<string, BuiltinRender>,
   [GTDManifest.identifier]: GTDRenders as Record<string, BuiltinRender>,
   [KnowledgeBaseManifest.identifier]: KnowledgeBaseRenders as Record<string, BuiltinRender>,
   [LocalSystemManifest.identifier]: LocalSystemRenders as Record<string, BuiltinRender>,

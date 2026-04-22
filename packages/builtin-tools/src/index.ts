@@ -5,11 +5,10 @@ import { AgentManagementManifest } from '@lobechat/builtin-tool-agent-management
 import { BriefManifest } from '@lobechat/builtin-tool-brief';
 import { CalculatorManifest } from '@lobechat/builtin-tool-calculator';
 import { CloudSandboxManifest } from '@lobechat/builtin-tool-cloud-sandbox';
-import { CredsManifest } from '@lobechat/builtin-tool-creds';
 import { CronManifest } from '@lobechat/builtin-tool-cron';
 import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
-import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
-import { GroupManagementManifest } from '@lobechat/builtin-tool-group-management';
+// import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
+// import { GroupManagementManifest } from '@lobechat/builtin-tool-group-management';
 import { GTDManifest } from '@lobechat/builtin-tool-gtd';
 import { KnowledgeBaseManifest } from '@lobechat/builtin-tool-knowledge-base';
 import { LocalSystemManifest } from '@lobechat/builtin-tool-local-system';
@@ -141,11 +140,11 @@ export const builtinTools: LobeBuiltinTool[] = [
     manifest: AgentDocumentsManifest,
     type: 'builtin',
   },
-  {
-    identifier: CredsManifest.identifier,
-    manifest: CredsManifest,
-    type: 'builtin',
-  },
+  // {
+  //   identifier: CredsManifest.identifier,
+  //   manifest: CredsManifest,
+  //   type: 'builtin',
+  // },
   {
     identifier: CronManifest.identifier,
     manifest: CronManifest,
@@ -177,20 +176,20 @@ export const builtinTools: LobeBuiltinTool[] = [
     manifest: AgentBuilderManifest,
     type: 'builtin',
   },
-  {
-    discoverable: false,
-    hidden: true,
-    identifier: GroupAgentBuilderManifest.identifier,
-    manifest: GroupAgentBuilderManifest,
-    type: 'builtin',
-  },
-  {
-    discoverable: false,
-    hidden: true,
-    identifier: GroupManagementManifest.identifier,
-    manifest: GroupManagementManifest,
-    type: 'builtin',
-  },
+  // {
+  //   discoverable: false,
+  //   hidden: true,
+  //   identifier: GroupAgentBuilderManifest.identifier,
+  //   manifest: GroupAgentBuilderManifest,
+  //   type: 'builtin',
+  // },
+  // {
+  //   discoverable: false,
+  //   hidden: true,
+  //   identifier: GroupManagementManifest.identifier,
+  //   manifest: GroupManagementManifest,
+  //   type: 'builtin',
+  // },
   {
     hidden: true,
     identifier: AgentManagementManifest.identifier,

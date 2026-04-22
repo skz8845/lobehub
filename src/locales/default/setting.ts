@@ -843,7 +843,7 @@ When I am ___, I need ___
 💡 Tip: The more specific your description, the better we can meet your needs`,
   'skillStore.wantMore.feedback.title':
     '[Skill Request] Summarize the skill you need in one sentence',
-  'skillStore.wantMore.reachedEnd': "You've reached the end. Can't find what you need?",
+  'skillStore.wantMore.reachedEnd': "You've reached the end.",
   'startConversation': 'Start Conversation',
   'storage.actions.export.button': 'Export',
   'storage.actions.export.exportType.agent': 'Export Agent Settings',

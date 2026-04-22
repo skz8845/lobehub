@@ -1,5 +1,5 @@
 import { AgentManagementIdentifier } from '@lobechat/builtin-tool-agent-management';
-import { GroupAgentBuilderIdentifier } from '@lobechat/builtin-tool-group-agent-builder';
+// import { GroupAgentBuilderIdentifier } from '@lobechat/builtin-tool-group-agent-builder';
 import { UserInteractionIdentifier } from '@lobechat/builtin-tool-user-interaction';
 import { DEFAULT_PROVIDER } from '@lobechat/business-const';
 import { DEFAULT_ONBOARDING_MODEL } from '@lobechat/const';
@@ -35,7 +35,7 @@ export const WEB_ONBOARDING: BuiltinAgentDefinition = {
       WebOnboardingIdentifier,
       UserInteractionIdentifier,
       AgentManagementIdentifier,
-      GroupAgentBuilderIdentifier,
+      // GroupAgentBuilderIdentifier,
       ...(ctx.plugins || []),
     ],
     systemRole: createSystemRole(ctx.userLocale, { isDev: ctx.isDev }),

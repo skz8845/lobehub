@@ -2,7 +2,7 @@
 
 import { Flexbox, Icon, Tabs } from '@lobehub/ui';
 import { createStaticStyles } from 'antd-style';
-import { BookOpenIcon, BotIcon, CodeIcon } from 'lucide-react';
+import { BookOpenIcon, CodeIcon } from 'lucide-react';
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -45,11 +45,11 @@ const Nav = memo<NavProps>(({ activeTab = 'overview', setActiveTab, mobile }) =>
         key: 'schema',
         label: t('skillDetail.tabs.tools'),
       },
-      {
-        icon: <Icon icon={BotIcon} size={16} />,
-        key: 'agents',
-        label: t('skillDetail.tabs.agents'),
-      },
+      // {
+      //   icon: <Icon icon={BotIcon} size={16} />,
+      //   key: 'agents',
+      //   label: t('skillDetail.tabs.agents'),
+      // },
     ],
     [t],
   );

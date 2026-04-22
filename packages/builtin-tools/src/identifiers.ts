@@ -6,8 +6,8 @@ import { CalculatorManifest } from '@lobechat/builtin-tool-calculator';
 import { CloudSandboxManifest } from '@lobechat/builtin-tool-cloud-sandbox';
 import { CredsManifest } from '@lobechat/builtin-tool-creds';
 import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
-import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
-import { GroupManagementManifest } from '@lobechat/builtin-tool-group-management';
+// import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
+// import { GroupManagementManifest, GroupManagementManifest } from '@lobechat/builtin-tool-group-management';
 import { GTDManifest } from '@lobechat/builtin-tool-gtd';
 import { KnowledgeBaseManifest } from '@lobechat/builtin-tool-knowledge-base';
 import { LocalSystemManifest } from '@lobechat/builtin-tool-local-system';
@@ -29,8 +29,8 @@ export const builtinToolIdentifiers: string[] = [
   CloudSandboxManifest.identifier,
   CredsManifest.identifier,
   CveAnalyzerManifest.identifier,
-  GroupAgentBuilderManifest.identifier,
-  GroupManagementManifest.identifier,
+  // GroupAgentBuilderManifest.identifier,
+  // GroupManagementManifest.identifier,
   GTDManifest.identifier,
   KnowledgeBaseManifest.identifier,
   LocalSystemManifest.identifier,

@@ -1,5 +1,6 @@
 import { Flexbox, Text } from '@lobehub/ui';
 import { memo, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import DebugNode from '@/components/DebugNode';
 
@@ -7,6 +8,7 @@ import type { CheckboxItemProps } from '../components/CheckboxWithLoading';
 import CheckboxItem from '../components/CheckboxWithLoading';
 
 const ToolItem = memo<CheckboxItemProps>(({ id, onUpdate, label, checked }) => {
+  const { t } = useTranslation('setting');
   return (
     <Suspense fallback={<DebugNode trace="ActionBar/Tools/ToolItem" />}>
       <CheckboxItem
@@ -21,7 +23,7 @@ const ToolItem = memo<CheckboxItemProps>(({ id, onUpdate, label, checked }) => {
                 tooltipWhenOverflow: true,
               }}
             >
-              {label || id}
+              {t(`tools.builtins.${id}.title`) || label || id}
             </Text>
           </Flexbox>
         }

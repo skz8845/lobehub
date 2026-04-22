@@ -22,14 +22,14 @@ import {
   CveAnalyzerInspectors,
   CveAnalyzerManifest,
 } from '@lobechat/builtin-tool-cve-analyzer/client';
-import {
-  GroupAgentBuilderInspectors,
-  GroupAgentBuilderManifest,
-} from '@lobechat/builtin-tool-group-agent-builder/client';
-import {
-  GroupManagementInspectors,
-  GroupManagementManifest,
-} from '@lobechat/builtin-tool-group-management/client';
+// import {
+//   GroupAgentBuilderInspectors,
+//   GroupAgentBuilderManifest,
+// } from '@lobechat/builtin-tool-group-agent-builder/client';
+// import {
+//   GroupManagementInspectors,
+//   GroupManagementManifest,
+// } from '@lobechat/builtin-tool-group-management/client';
 import { GTDInspectors, GTDManifest } from '@lobechat/builtin-tool-gtd/client';
 import {
   KnowledgeBaseInspectors,
@@ -69,14 +69,14 @@ const BuiltinToolInspectors: Record<string, Record<string, BuiltinInspector>> = 
   >,
   [ClaudeCodeIdentifier]: ClaudeCodeInspectors as Record<string, BuiltinInspector>,
   [CloudSandboxIdentifier]: CloudSandboxInspectors as Record<string, BuiltinInspector>,
-  [GroupAgentBuilderManifest.identifier]: GroupAgentBuilderInspectors as Record<
-    string,
-    BuiltinInspector
-  >,
-  [GroupManagementManifest.identifier]: GroupManagementInspectors as Record<
-    string,
-    BuiltinInspector
-  >,
+  // [GroupAgentBuilderManifest.identifier]: GroupAgentBuilderInspectors as Record<
+  //   string,
+  //   BuiltinInspector
+  // >,
+  // [GroupManagementManifest.identifier]: GroupManagementInspectors as Record<
+  //   string,
+  //   BuiltinInspector
+  // >,
   [CveAnalyzerManifest.identifier]: CveAnalyzerInspectors as Record<string, BuiltinInspector>,
   [GTDManifest.identifier]: GTDInspectors as Record<string, BuiltinInspector>,
   [KnowledgeBaseManifest.identifier]: KnowledgeBaseInspectors as Record<string, BuiltinInspector>,

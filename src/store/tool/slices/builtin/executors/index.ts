@@ -11,8 +11,6 @@ import { cloudSandboxExecutor } from '@lobechat/builtin-tool-cloud-sandbox/execu
 import { credsExecutor } from '@lobechat/builtin-tool-creds/executor';
 import { cronExecutor } from '@lobechat/builtin-tool-cron/executor';
 import { cveAnalyzerExecutor } from '@lobechat/builtin-tool-cve-analyzer/executor';
-import { groupAgentBuilderExecutor } from '@lobechat/builtin-tool-group-agent-builder/executor';
-import { groupManagementExecutor } from '@lobechat/builtin-tool-group-management/executor';
 import { gtdExecutor } from '@lobechat/builtin-tool-gtd/executor';
 import { knowledgeBaseExecutor } from '@lobechat/builtin-tool-knowledge-base/executor';
 import { localSystemExecutor } from '@lobechat/builtin-tool-local-system/executor';
@@ -138,8 +136,8 @@ registerExecutors([
   cveAnalyzerExecutor,
   credsExecutor,
   cronExecutor,
-  groupAgentBuilderExecutor,
-  groupManagementExecutor,
+  // groupAgentBuilderExecutor,
+  // groupManagementExecutor,
   gtdExecutor,
   knowledgeBaseExecutor,
   localSystemExecutor,

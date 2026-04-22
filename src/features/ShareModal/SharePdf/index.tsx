@@ -36,14 +36,14 @@ const SharePdf = memo((props: { message?: UIChatMessage }) => {
   const isMobile = useIsMobile();
 
   const settings: FormItemProps[] = [
-    {
-      children: <Switch />,
-      label: t('shareModal.withSystemRole'),
-      layout: 'horizontal',
-      minWidth: undefined,
-      name: 'withSystemRole',
-      valuePropName: 'checked',
-    },
+    // {
+    //   children: <Switch />,
+    //   label: t('shareModal.withSystemRole'),
+    //   layout: 'horizontal',
+    //   minWidth: undefined,
+    //   name: 'withSystemRole',
+    //   valuePropName: 'checked',
+    // },
     {
       children: <Switch />,
       label: t('shareModal.withRole'),

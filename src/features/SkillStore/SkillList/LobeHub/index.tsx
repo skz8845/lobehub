@@ -1,6 +1,6 @@
 'use client';
 
-import { KLAVIS_SERVER_TYPES, LOBEHUB_SKILL_PROVIDERS } from '@lobechat/const';
+import type { KLAVIS_SERVER_TYPES, LOBEHUB_SKILL_PROVIDERS } from '@lobechat/const';
 import { type BuiltinSkill, type LobeToolMeta } from '@lobechat/types';
 import isEqual from 'fast-deep-equal';
 import { memo, useCallback, useMemo } from 'react';
@@ -92,18 +92,18 @@ export const LobeHubList = memo<LobeHubListProps>(({ keywords }) => {
     }
 
     // Add LobeHub skills
-    if (isLobehubSkillEnabled) {
-      for (const provider of LOBEHUB_SKILL_PROVIDERS) {
-        items.push({ provider, type: 'lobehub' });
-      }
-    }
+    // if (isLobehubSkillEnabled) {
+    //   for (const provider of LOBEHUB_SKILL_PROVIDERS) {
+    //     items.push({ provider, type: 'lobehub' });
+    //   }
+    // }
 
     // Add Klavis skills
-    if (isKlavisEnabled) {
-      for (const serverType of KLAVIS_SERVER_TYPES) {
-        items.push({ serverType, type: 'klavis' });
-      }
-    }
+    // if (isKlavisEnabled) {
+    //   for (const serverType of KLAVIS_SERVER_TYPES) {
+    //     items.push({ serverType, type: 'klavis' });
+    //   }
+    // }
 
     // Filter by keywords
     const lowerKeywords = keywords.toLowerCase().trim();
@@ -123,7 +123,7 @@ export const LobeHubList = memo<LobeHubListProps>(({ keywords }) => {
       const label = item.type === 'lobehub' ? item.provider.label : item.serverType.label;
       return label.toLowerCase().includes(lowerKeywords);
     });
-  }, [keywords, isLobehubSkillEnabled, isKlavisEnabled, builtinTools, builtinSkills]);
+  }, [keywords, builtinTools, builtinSkills]);
 
   const hasSearchKeywords = Boolean(keywords && keywords.trim());
 

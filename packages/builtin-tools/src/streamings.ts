@@ -14,14 +14,14 @@ import {
   CloudSandboxManifest,
   CloudSandboxStreamings,
 } from '@lobechat/builtin-tool-cloud-sandbox/client';
-import {
-  GroupAgentBuilderManifest,
-  GroupAgentBuilderStreamings,
-} from '@lobechat/builtin-tool-group-agent-builder/client';
-import {
-  GroupManagementManifest,
-  GroupManagementStreamings,
-} from '@lobechat/builtin-tool-group-management/client';
+// import {
+//   GroupAgentBuilderManifest,
+//   GroupAgentBuilderStreamings,
+// } from '@lobechat/builtin-tool-group-agent-builder/client';
+// import {
+//   GroupManagementManifest,
+//   GroupManagementStreamings,
+// } from '@lobechat/builtin-tool-group-management/client';
 import { GTDManifest, GTDStreamings } from '@lobechat/builtin-tool-gtd/client';
 import {
   LocalSystemManifest,
@@ -48,14 +48,14 @@ const BuiltinToolStreamings: Record<string, Record<string, BuiltinStreaming>> = 
     BuiltinStreaming
   >,
   [CloudSandboxManifest.identifier]: CloudSandboxStreamings as Record<string, BuiltinStreaming>,
-  [GroupAgentBuilderManifest.identifier]: GroupAgentBuilderStreamings as Record<
-    string,
-    BuiltinStreaming
-  >,
-  [GroupManagementManifest.identifier]: GroupManagementStreamings as Record<
-    string,
-    BuiltinStreaming
-  >,
+  // [GroupAgentBuilderManifest.identifier]: GroupAgentBuilderStreamings as Record<
+  //   string,
+  //   BuiltinStreaming
+  // >,
+  // [GroupManagementManifest.identifier]: GroupManagementStreamings as Record<
+  //   string,
+  //   BuiltinStreaming
+  // >,
   [GTDManifest.identifier]: GTDStreamings as Record<string, BuiltinStreaming>,
   [LocalSystemManifest.identifier]: LocalSystemStreamings as Record<string, BuiltinStreaming>,
   [MemoryManifest.identifier]: MemoryStreamings as Record<string, BuiltinStreaming>,
