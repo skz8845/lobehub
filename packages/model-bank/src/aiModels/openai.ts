@@ -1349,6 +1349,54 @@ export const openaiChatModels: AIChatModelCard[] = [
     },
     type: 'chat',
   },
+  {
+    abilities: {
+      functionCall: true,
+      vision: true,
+    },
+    contextWindowTokens: 200_000,
+    description:
+      'Gemma 4 is a high-performing, efficient open model from Google built from the same technology used to create Gemini.',
+    displayName: 'gemma-4-26b-a4b-it',
+    enabled: true,
+    id: 'gemma-4-26b-a4b-it',
+    maxOutput: 65_535,
+    pricing: {
+      units: [
+        { name: 'textInput_cacheRead', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+        { name: 'textInput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+        { name: 'textOutput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+      ],
+    },
+    settings: {
+      extendParams: ['disableContextCaching'],
+    },
+    type: 'chat',
+  },
+  {
+    abilities: {
+      functionCall: true,
+      vision: true,
+    },
+    contextWindowTokens: 200_000,
+    description:
+      'Gemma 4 is a high-performing, efficient open model from Google built from the same technology used to create Gemini.',
+    displayName: 'gemma-4-31B-it-opus',
+    enabled: false,
+    id: 'gemma-4-31B-it-opus',
+    maxOutput: 65_535,
+    pricing: {
+      units: [
+        { name: 'textInput_cacheRead', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+        { name: 'textInput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+        { name: 'textOutput', rate: 0, strategy: 'fixed', unit: 'millionTokens' },
+      ],
+    },
+    settings: {
+      extendParams: ['disableContextCaching'],
+    },
+    type: 'chat',
+  },
 ];
 
 export const openaiEmbeddingModels: AIEmbeddingModelCard[] = [

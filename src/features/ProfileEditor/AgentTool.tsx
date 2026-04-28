@@ -25,7 +25,7 @@ import { createSkillStoreModal } from '@/features/SkillStore';
 import { useCheckPluginsIsInstalled } from '@/hooks/useCheckPluginsIsInstalled';
 import { useFetchInstalledPlugins } from '@/hooks/useFetchInstalledPlugins';
 import { useAgentStore } from '@/store/agent';
-import { agentSelectors, chatConfigByIdSelectors } from '@/store/agent/selectors';
+import { agentSelectors } from '@/store/agent/selectors';
 import { serverConfigSelectors, useServerConfigStore } from '@/store/serverConfig';
 import { useToolStore } from '@/store/tool';
 import {
@@ -90,9 +90,11 @@ const AgentTool = memo<AgentToolProps>(
     );
 
     // Web browsing uses searchMode instead of plugins array - use byId selector
-    const isSearchEnabled = useAgentStore(
-      chatConfigByIdSelectors.isEnableSearchById(effectiveAgentId),
-    );
+    // const isSearchEnabled = useAgentStore(
+    //   chatConfigByIdSelectors.isEnableSearchById(effectiveAgentId),
+    // );
+
+    const isSearchEnabled = false;
 
     // Klavis-related state
     const allKlavisServers = useToolStore(klavisStoreSelectors.getServers, isEqual);

@@ -1,5 +1,4 @@
 import { ActionIcon, DropdownMenu, Flexbox, Icon } from '@lobehub/ui';
-import { ShapesUploadIcon } from '@lobehub/ui/icons';
 import { App, Modal } from 'antd';
 import isEqual from 'fast-deep-equal';
 import { BotMessageSquareIcon, MoreHorizontal, Settings2Icon, Trash } from 'lucide-react';
@@ -139,13 +138,13 @@ const Header = memo(() => {
         label: t('advancedSettings', { ns: 'setting' }),
         onClick: () => useAgentStore.setState({ showAgentSetting: true }),
       },
-      { type: 'divider' as const },
-      {
-        icon: <Icon icon={ShapesUploadIcon} />,
-        key: 'publish',
-        label: t('publishToCommunity', { ns: 'setting' }),
-        onClick: handlePublishClick,
-      },
+      // { type: 'divider' as const },
+      // {
+      //   icon: <Icon icon={ShapesUploadIcon} />,
+      //   key: 'publish',
+      //   label: t('publishToCommunity', { ns: 'setting' }),
+      //   onClick: handlePublishClick,
+      // },
       { type: 'divider' as const },
       {
         danger: true,
