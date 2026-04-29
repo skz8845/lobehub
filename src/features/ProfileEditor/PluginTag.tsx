@@ -182,13 +182,14 @@ const PluginTag = memo<PluginTagProps>(
 
       return null;
     }, [
-      identifier,
+      isKlavisEnabledInEnv,
+      isLobehubSkillEnabled,
       builtinList,
       installedPluginList,
-      isKlavisEnabledInEnv,
+      identifier,
       allKlavisServers,
-      isLobehubSkillEnabled,
       allLobehubSkillServers,
+      useAllMetaList,
     ]);
 
     // Fetch from remote if not found locally
@@ -208,7 +209,9 @@ const PluginTag = memo<PluginTagProps>(
     };
 
     // Use identifier as title when loading, otherwise use meta.title
-    const displayTitle = meta.title;
+    const displayTitle = t(`tools.builtins.${identifier}.title` as never, {
+      defaultValue: meta.title,
+    });
     const isDesktopOnly = showDesktopOnlyLabel && !meta.availableInWeb;
 
     // Render icon based on type

@@ -49,6 +49,10 @@ import { PageAgentInspectors, PageAgentManifest } from '@lobechat/builtin-tool-p
 // } from '@lobechat/builtin-tool-skill-store/client';
 import { SkillsInspectors, SkillsManifest } from '@lobechat/builtin-tool-skills/client';
 import {
+  ThreatIntelInspectors,
+  ThreatIntelManifest,
+} from '@lobechat/builtin-tool-threat-intel/client';
+import {
   WebBrowsingInspectors,
   WebBrowsingManifest,
 } from '@lobechat/builtin-tool-web-browsing/client';
@@ -78,6 +82,7 @@ const BuiltinToolInspectors: Record<string, Record<string, BuiltinInspector>> = 
   //   BuiltinInspector
   // >,
   [CveAnalyzerManifest.identifier]: CveAnalyzerInspectors as Record<string, BuiltinInspector>,
+  [ThreatIntelManifest.identifier]: ThreatIntelInspectors as Record<string, BuiltinInspector>,
   [GTDManifest.identifier]: GTDInspectors as Record<string, BuiltinInspector>,
   [KnowledgeBaseManifest.identifier]: KnowledgeBaseInspectors as Record<string, BuiltinInspector>,
   [LocalSystemManifest.identifier]: LocalSystemInspectors as Record<string, BuiltinInspector>,

@@ -1,12 +1,10 @@
 import { type SidebarAgentItem } from '@lobechat/types';
 import { Flexbox } from '@lobehub/ui';
-import { MoreHorizontal } from 'lucide-react';
 import { type CSSProperties } from 'react';
 import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import EmptyNavItem from '@/features/NavPanel/components/EmptyNavItem';
-import NavItem from '@/features/NavPanel/components/NavItem';
 import { useGlobalStore } from '@/store/global';
 import { systemStatusSelectors } from '@/store/global/selectors';
 import { useHomeStore } from '@/store/home';
@@ -14,7 +12,6 @@ import { homeAgentListSelectors } from '@/store/home/selectors';
 import { SessionDefaultGroup } from '@/types/session';
 
 import { useCreateMenuItems } from '../../../hooks';
-import NewAgentButton from '../../NewAgentButton';
 import GroupItem from './AgentGroupItem';
 import AgentItem from './AgentItem';
 
@@ -61,7 +58,7 @@ const List = memo<SessionListProps>(
             <AgentItem className={itemClassName} item={item} key={item.id} style={itemStyle} />
           ),
         )}
-        {isDefaultList &&
+        {/* {isDefaultList &&
           (hasMore ? (
             <NavItem
               icon={MoreHorizontal}
@@ -70,7 +67,7 @@ const List = memo<SessionListProps>(
             />
           ) : (
             <NewAgentButton />
-          ))}
+          ))} */}
       </Flexbox>
     );
   },

@@ -16,6 +16,7 @@ import { NotebookManifest } from '@lobechat/builtin-tool-notebook';
 import { PageAgentManifest } from '@lobechat/builtin-tool-page-agent';
 // import { SkillStoreManifest } from '@lobechat/builtin-tool-skill-store';
 import { SkillsManifest } from '@lobechat/builtin-tool-skills';
+import { ThreatIntelManifest } from '@lobechat/builtin-tool-threat-intel';
 import { TopicReferenceManifest } from '@lobechat/builtin-tool-topic-reference';
 import { UserInteractionManifest } from '@lobechat/builtin-tool-user-interaction';
 // import { WebBrowsingManifest } from '@lobechat/builtin-tool-web-browsing';
@@ -29,6 +30,7 @@ export const builtinToolIdentifiers: string[] = [
   CloudSandboxManifest.identifier,
   CredsManifest.identifier,
   CveAnalyzerManifest.identifier,
+  ThreatIntelManifest.identifier,
   // GroupAgentBuilderManifest.identifier,
   // GroupManagementManifest.identifier,
   GTDManifest.identifier,

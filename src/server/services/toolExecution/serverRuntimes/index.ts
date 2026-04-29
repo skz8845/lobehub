@@ -23,6 +23,7 @@ import { remoteDeviceRuntime } from './remoteDevice';
 import { skillsRuntime } from './skills';
 // import { skillStoreRuntime } from './skillStore';
 import { taskRuntime } from './task';
+import { threatIntelRuntime } from './threatIntel';
 import { topicReferenceRuntime } from './topicReference';
 import { type ServerRuntimeFactory, type ServerRuntimeRegistration } from './types';
 import { userInteractionRuntime } from './userInteraction';
@@ -63,6 +64,7 @@ registerRuntimes([
   credsRuntime,
   cronRuntime,
   gtdRuntime,
+  threatIntelRuntime,
   webOnboardingRuntime,
 ]);
 

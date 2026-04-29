@@ -29,6 +29,8 @@ import { MemoryManifest, MemoryRenders } from '@lobechat/builtin-tool-memory/cli
 import { NotebookManifest, NotebookRenders } from '@lobechat/builtin-tool-notebook/client';
 // import { SkillStoreManifest, SkillStoreRenders } from '@lobechat/builtin-tool-skill-store/client';
 import { SkillsManifest, SkillsRenders } from '@lobechat/builtin-tool-skills/client';
+import { ThreatIntelManifest } from '@lobechat/builtin-tool-threat-intel';
+import { ThreatIntelRenders } from '@lobechat/builtin-tool-threat-intel/client';
 import {
   WebBrowsingManifest,
   WebBrowsingRenders,
@@ -46,6 +48,7 @@ const BuiltinToolsRenders: Record<string, Record<string, BuiltinRender>> = {
   [ClaudeCodeIdentifier]: ClaudeCodeRenders as Record<string, BuiltinRender>,
   [CloudSandboxManifest.identifier]: CloudSandboxRenders as Record<string, BuiltinRender>,
   [CveAnalyzerManifest.identifier]: CveAnalyzerRenders as Record<string, BuiltinRender>,
+  [ThreatIntelManifest.identifier]: ThreatIntelRenders as Record<string, BuiltinRender>,
   // [GroupAgentBuilderManifest.identifier]: GroupAgentBuilderRenders as Record<string, BuiltinRender>,
   // [GroupManagementManifest.identifier]: GroupManagementRenders as Record<string, BuiltinRender>,
   [GTDManifest.identifier]: GTDRenders as Record<string, BuiltinRender>,

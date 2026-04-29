@@ -17,6 +17,7 @@ import { LocalSystemManifest } from '@lobechat/builtin-tool-local-system';
 import { MemoryManifest } from '@lobechat/builtin-tool-memory';
 import { MessageManifest } from '@lobechat/builtin-tool-message';
 import { RemoteDeviceManifest } from '@lobechat/builtin-tool-remote-device';
+import { ThreatIntelManifest } from '@lobechat/builtin-tool-threat-intel';
 // import { WebBrowsingManifest } from '@lobechat/builtin-tool-web-browsing';
 import { alwaysOnToolIds, builtinTools, defaultToolIds } from '@lobechat/builtin-tools';
 import { createEnableChecker, type LobeToolManifest } from '@lobechat/context-engine';
@@ -167,6 +168,7 @@ export const createServerAgentToolsEngine = (
         [CloudSandboxManifest.identifier]: runtimeMode === 'cloud',
         [KnowledgeBaseManifest.identifier]: hasEnabledKnowledgeBases,
         [CveAnalyzerManifest.identifier]: true,
+        [ThreatIntelManifest.identifier]: true,
         // Local-system: user must have opted into local runtime on this
         // platform (`runtimeMode === 'local'`), AND one execution channel
         // must exist:

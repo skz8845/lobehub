@@ -55,6 +55,7 @@ import { sessionGroupRouter } from './sessionGroup';
 import { shareRouter } from './share';
 import { taskRouter } from './task';
 import { threadRouter } from './thread';
+import { threatIntelRouter } from './threatIntel';
 import { topicRouter } from './topic';
 import { uploadRouter } from './upload';
 import { usageRouter } from './usage';
@@ -111,6 +112,7 @@ export const lambdaRouter = router({
   session: sessionRouter,
   sessionGroup: sessionGroupRouter,
   share: shareRouter,
+  threatIntel: threatIntelRouter,
   thread: threadRouter,
   topic: topicRouter,
   upload: uploadRouter,

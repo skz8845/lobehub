@@ -15,6 +15,7 @@ import { gtdExecutor } from '@lobechat/builtin-tool-gtd/executor';
 import { knowledgeBaseExecutor } from '@lobechat/builtin-tool-knowledge-base/executor';
 import { localSystemExecutor } from '@lobechat/builtin-tool-local-system/executor';
 import { memoryExecutor } from '@lobechat/builtin-tool-memory/executor';
+import { threatIntelExecutor } from '@lobechat/builtin-tool-threat-intel/executor';
 
 import type { BuiltinToolContext, BuiltinToolResult, IBuiltinToolExecutor } from '../types';
 import { activatorExecutor } from './lobe-activator';
@@ -134,6 +135,7 @@ registerExecutors([
   calculatorExecutor,
   cloudSandboxExecutor,
   cveAnalyzerExecutor,
+  threatIntelExecutor,
   credsExecutor,
   cronExecutor,
   // groupAgentBuilderExecutor,
