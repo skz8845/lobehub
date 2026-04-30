@@ -22,7 +22,7 @@ export const SaAnalyzerManifest: BuiltinToolManifest = {
       description: `分页查询安全事件，支持按事件类型、危险级别、网络区域、时间段过滤。
 
 ### 网络区域可用值
-- police(公安网), internet(互联网), video(视频传输网), mobilePolice(移动信息��)
+- police(公安网), internet(互联网), video(视频传输网), mobilePolice(移动信息网)
 
 ### typeIn 事件一级类型
 | 网络 | 编码 | 说明 |
@@ -30,27 +30,66 @@ export const SaAnalyzerManifest: BuiltinToolManifest = {
 | police | 31 | 违规事件 |
 | police | 32 | 安全事件 |
 | police | 33 | 用户行为异常 |
-| police | 34 | 数据安全 |
-| police | 35 | 设备健康 |
+| police | 34 | 数据安全事件 |
+| police | 35 | 设备健康事件 |
 | video | 1 | 违规事件 |
 | video | 2 | 安全事件 |
-| video | 3 | 其他 |
+| video | 3 | 其他事件 |
 | internet | 41 | 安全事件 |
 | internet | 42 | 正常事件 |
-| internet | 43 | 网站攻击 |
-| internet | 44 | 服务控制 |
+| internet | 43 | 网站攻击事件 |
+| internet | 44 | 服务控制或应用控制 |
 | mobilePolice | 21 | 漏洞利用攻击 |
 | mobilePolice | 22 | 网站攻击 |
 | mobilePolice | 23 | 僵尸网络 |
 | mobilePolice | 24 | 业务弱点 |
 
-### subTypeIn 常用子类型(police)
-- **31违规事件**: 3198=违规远控(319801=TeamViewer,319802=向日葵), 3199=违规外联, 3102=违规代理, 3103=违规内网穿透, 3104=违规接入
-- **32安全事件**: 3205=安全扫描, 3207=暴力破解, 3213=僵尸网络, 3225=应用层DDos, 3229=Web应用攻击(322901=SQL注入), 3230=漏洞利用, 3231=恶意程序C2, 3238=APT事件
-- **33用户行为**: 3309=认证登录异常, 3310=PKI证书异常, 3311=数据查询异常
+### subTypeIn 子类型 — police 31 违规事件
+**L2**: 3101=运维违规, 3102=违规代理, 3103=违规内网穿透, 3104=违规接入, 3105=飞行与特种作业违规, 3106=违规进程运行, 3108=资产配置违规, 3109=违规远程登录, 3198=违规远控, 3199=违规外联
+**L3 3198违规远控**: 319801=TeamViewer, 319802=向日葵, 319803=ToDesk, 319804=RustDesk, 319805=AnyDesk, 319806=腾讯远程协助, 319807=百度远程控制, 319808=pcAnywhere, 319810=X11 Forwarding
+**L3 3199违规外联**: 319901=违规外联互联网, 319902=离网外联互联网, 319903=串网外联互联网, 319904=违规外联其他网, 319905=一机两用, 319906=IPv6串线风险, 319908=隐蔽外联通道, 319909=违规上网-网络娱乐
+**L3 3102违规代理**: 310201=FreeGate(自由门), 310202=Tor(洋葱路由), 310203=Shadowsocks(SS), 310204=V2Ray/Xray, 310205=Clash, 310206=SSH隧道
+**L3 3103违规内网穿透**: 310301=花生壳, 310302=FRP, 310303=Ngrok
+**L3 3104违规接入**: 310401=灰资产接入, 310402=辖区外/跨域接入, 310403=疑似串网接入, 310404=移动终端违规接入, 310405=非法外设接入, 310406=一卡多机, 310407=一机多卡, 310408=违规组网
 
-### subTypeIn 常用子类型(internet)
-- 43网站攻击: 4301=Web入侵, 4302=Web扫描, 4303=XSS攻击, 4304=SQL注入
+### subTypeIn 子类型 — police 32 安全事件
+**L2核心**: 3205=安全扫描, 3207=暴力破解, 3208=脆弱口令, 3210=分布式拒绝服务, 3213=僵尸网络, 3216=木马后门, 3217=欺骗劫持, 3225=应用层DDos攻击, 3229=Web应用攻击, 3230=漏洞利用与渗透, 3231=恶意程序与C2, 3232=隐蔽隧道技术, 3233=邮件与协议攻击, 3234=网络层DoS, 3235=不安全配置, 3236=异常扫描, 3237=后门攻击, 3238=APT事件, 3239=恶意通信, 3240=协议异常
+**L3 3229 Web应用攻击**: 322901=SQL注入, 322902=XSS跨站脚本, 322903=远程命令/代码执行(RCE), 322904=目录遍历与文件包含, 322905=Webshell上传, 322906=Webshell连接通信, 322907=CC攻击, 322908=恶意爬虫与撞库, 322910=未授权访问, 322920=跨站请求伪造(CSRF)
+**L3 3230 漏洞利用与渗透**: 323001=远程代码执行漏洞利用, 323002=反序列化漏洞利用, 323003=SMB/NTLM横向移动, 323006=中间件/容器漏洞利用, 323021=网页篡改, 323025=钓鱼网站, 323028=拖库
+**L3 3231 恶意程序与C2**: 323101=勒索软件通信, 323102=挖矿程序通信, 323103=DGA域名解析, 323104=僵尸网络/C2心跳, 323105=恶意文件传播, 323107=间谍软件, 323109=恶意程序
+**L3 3232 隐蔽隧道**: 323201=DNS隧道, 323202=ICMP隧道, 323203=HTTP/HTTPS隐蔽通道, 323204=SSH隧道, 323206=SOCKS代理违规搭建
+**L3 3234 网络层DoS**: 323401=SYN Flood, 323402=ACK Flood, 323405=UDP Flood, 323406=ICMP Flood/Smurf, 323408=DNS反射放大, 323411=NTP反射放大
+**L3 3238 APT事件**: 323801=海莲花, 323802=APT-C-35, 323804=APT30, 323806=Lazarus, 323807=BITTER, 323809=APT10, 323813=APT28, 323817=高级持续性威胁
+
+### subTypeIn 子类型 — police 33 用户行为异常
+**L2**: 3301=异地登录, 3302=同人不同终端, 3303=红名单, 3304=退休用户访问, 3305=同终端不同人, 3306=频繁操作, 3307=非工作时间访问, 3308=非业务部门查询, 3309=认证与登录异常, 3310=PKI证书使用行为异常, 3311=数据查询行为异常, 3312=终端操作行为
+**L3 3309 认证登录异常**: 330901=异地登录/非常用地点, 330902=非工作时间登录, 330903=频繁登录失败, 330904=同人不同终端, 330906=退休用户访问
+**L3 3310 PKI证书**: 331001=PKI跨区域使用, 331002=PKI长期未拔出, 331003=一Key多机, 331004=一机多证, 331008=离退休PKI被使用, 331012=PKI证书弱口令
+**L3 3311 数据查询**: 331101=查询应用超限, 331102=查询警员数量超限, 331104=查询频次突增, 331107=敏感人群定向查询, 331109=查询年轻女性, 331110=公众人物查询
+**L3 3312 终端操作**: 331201=高频截屏/录屏, 331202=大量文件拷贝/打印, 331204=非授权文件分发/大流量传输
+
+### subTypeIn 子类型 — police 34 数据安全事件
+3401=身份证信息泄露风险, 3402=手机号信息泄露风险, 3403=车牌信息泄露风险, 3404=用户信息泄露风险, 3405=身份证号批量查询/导出, 3406=敏感人员被查, 3407=轨迹数据异常访问, 3408=数据库备份文件外传, 3409=源代码/配置文件外传, 3410=敏感关键词内容传输, 3411=退休人员访问敏感数据, 3412=非授权部门访问高密数据
+
+### subTypeIn 子类型 — police 35 设备健康事件
+3501=物联网设备状态(350101=低电量,350102=设备离线), 3502=无人机飞行安全(350201=GPS丢失,350203=避障失效,350209=遥控信号丢失,350210=电机/电调异常)
+
+### subTypeIn 子类型 — mobilePolice 21 漏洞利用攻击
+2101=mail漏洞攻击, 2103=口令暴力破解, 2105=database漏洞攻击, 2108=shellcode漏洞攻击, 2113=web漏洞攻击, 2122=IPS云防护, 2123=shellcode漏洞利用, 2125=数据库利用攻击, 2126=rat攻击
+
+### subTypeIn 子类型 — mobilePolice 22 网站攻击
+2201=SQL注入, 2202=XSS攻击, 2203=网页木马, 2204=网站扫描, 2205=WEBSHELL上传, 2206=跨站请求伪造, 2207=系统命令注入, 2208=文件包含攻击, 2209=目录遍历攻击, 2210=信息泄漏攻击, 2219=网页篡改, 2233=CC攻击防护, 2236=WEBSHELL后门, 2242=PHP反序列化攻击, 2243=Java反序列化攻击, 2252=服务端请求伪造(SSRF), 2253=RAT攻击
+
+### subTypeIn 子类型 — mobilePolice 23 僵尸网络
+2301=僵尸网络, 2302=木马远控, 2303=恶意链接, 2304=异常流量, 2305=移动僵尸网络, 2306=移动病毒, 2307=恶意软件
+
+### subTypeIn 子类型 — mobilePolice 24 业务弱点
+2401=弱口令检测, 2402=SQL注入漏洞, 2403=远程文件包含漏洞, 2404=系统命令注入漏洞, 2405=文件上传漏洞, 2406=跨站脚本(XSS)漏洞, 2409=WEBSHELL文件访问, 2411=WEB服务器漏洞, 2412=database服务器漏洞, 2419=cms漏洞
+
+### subTypeIn 子类型 — internet
+**41安全事件**: 4101=越权操作, 4102=攻击行为, 4103=切换账号风险, 4106=未授权操作, 4107=试探攻击
+**42正常事件**: 4201=系统运行行为, 4202=合规运维操作, 4203=系统提醒行为
+**43网站攻击事件**: 4301=SQL注入, 4302=XSS攻击, 4303=网页木马, 4304=网站扫描, 4305=WEBSHELL上传, 4306=跨站请求伪造, 4307=系统命令注入, 4308=文件包含攻击, 4309=目录遍历攻击, 4310=信息泄漏攻击, 4319=网页篡改, 4333=CC攻击防护, 4336=WEBSHELL后门, 4342=PHP反序列化攻击, 4343=Java反序列化攻击, 4352=服务端请求伪造(SSRF), 4353=RAT攻击, 4354=XXE攻击
 
 ### levelIn 危险级别
 1=提示, 2=低危, 3=中危, 4=高危, 5=超危`,
@@ -94,7 +133,7 @@ export const SaAnalyzerManifest: BuiltinToolManifest = {
 ### networkTypeIn
 video(视频传输网,主要), police(公安网), internet(互联网)
 
-### typeIn 脆弱性一级类型(video)
+### typeIn 脆弱性一级类型
 | 编码 | 说明 |
 |------|------|
 | webvuln | Web漏洞 |
@@ -104,18 +143,28 @@ video(视频传输网,主要), police(公安网), internet(互联网)
 | other | 其他 |
 
 ### subTypeIn webvuln子类(Web漏洞)
-- remote_code_exec_web=RCE, xss_web=XSS, sql_inject_web=SQL注入, sensitive_info_leak_web=信息泄漏
-- 厂商漏洞: v_Hikvision_Video_Product_Vulnerabilities=海康, v_Dahua=大华, v_UniNets=宇视
-
-### subTypeIn password子类(弱口令)
-- brute_force_attack_password=暴力破解
-- v_1001=onvif弱口令, v_1003=rtsp弱口令, v_3003=ssh弱口令, v_3004=telnet弱口令
-
-### subTypeIn compliance子类(边界完整性)
-- v_multi_host=多穴主机, v_internal_scan=违规外联检测, v_wifi_route_check=无线路由检测
+**通用攻击类型**: remote_code_exec_web=远程代码执行, xss_web=XSS跨站脚本, sql_inject_web=SQL注入, sensitive_info_leak_web=敏感信息泄漏, unauth_access_web=未授权访问, unauth_login_web=未授权登录, dir_traversal_attack_web=目录遍历攻击, exceed_auth_access_web=越权访问, info_collect_web=信息收集, virus_web=病毒木马蠕虫
+**主要视频厂商**: v_Hikvision_Video_Product_Vulnerabilities=海康视频漏洞, v_Dahua_Video_Product_Vulnerabilities=大华视频漏洞, v_Uniview_Video_Product_Vulnerabilities=宇视视频漏洞, v_KedaCom_Suzhou_Keda_Product_Vulnerabilities=KEDACOM科达漏洞, v_AVA_Audiovisual_Vulnerabilities=AVA奥威亚漏洞
+**主流中间件/框架**: v_Apache_Tomcat_Vulnerabilities=Tomcat漏洞, v_Apache_Struts2_Vulnerabilities=Struts2漏洞, v_Apache_Shiro_Vulnerabilities=Shiro漏洞, v_Apache_ActiveMQ_Vulnerabilities=ActiveMQ漏洞, v_Spring_Framework_Vulnerabilities=Spring漏洞, v_WebLogic_Server_Vulnerabilities=WebLogic漏洞, v_Jenkins_Vulnerabilities=Jenkins漏洞
+**数据库/存储**: v_Redis_Vulnerabilities=Redis漏洞, v_MySQL_Vulnerabilities=MySQL漏洞, v_Elastic_Vulnerabilities=Elastic漏洞, v_MinIO_Vulnerabilities=MinIO漏洞
+**网络设备**: v_Cisco_Products_Vulnerabilities=Cisco漏洞, v_H3C_Products_Vulnerabilities=H3C漏洞, v_Ruijie_Product_Vulnerabilities=锐捷漏洞, v_Juniper_Products_Vulnerabilities=Juniper漏洞, v_F5_Products_Vulnerabilities=F5漏洞
+**其他常见**: v_VMware_Vulnerabilities=VMware漏洞, v_WordPress_Vulnerabilities=WordPress漏洞, v_PHP_Vulnerabilities=PHP漏洞, v_OpenSSH_Vulnerabilities=OpenSSH漏洞, v_OpenSSL_Vulnerabilities=OpenSSL漏洞, v_Zero-Day_Vulnerability=零Day漏洞
 
 ### subTypeIn sysvuln子类(系统漏洞)
-- v_heartbleed=心脏出血, v_shellshock=破壳, v_poodle=POODLE
+any_file_read_sys=任意文件读取, dir_traversal_attack_sys=目录遍历攻击, info_collect_sys=信息收集, reject_service_sys=拒绝服务攻击, remote_code_exec_sys=远程代码执行, sensitive_info_leak_sys=敏感信息泄漏, unauth_access_sys=未授权访问, unauth_command_exec_sys=未授权的命令执行, unauth_login_sys=未授权登录, virus_sys=病毒木马蠕虫, xss_sys=XSS跨站脚本, v_Windows_Vulnerabilities=Windows系统漏洞, resp_info_collect_sys=收集响应信息, rsa_attack_sys=RSA算法攻击
+
+### subTypeIn password子类(弱口令)
+brute_force_attack_password=暴力破解, null_command_password=空口令, unauth_login_password=未授权登录
+**视频协议**: v_1001=onvif弱口令, v_1003=rtsp弱口令, v_1005=XMVideo弱口令, v_1006=hik-sdk弱口令, v_1007=hik-isapi弱口令
+**数据库**: v_2001=elastic弱口令, v_2003=mongodb弱口令, v_2005=postgresql弱口令, v_2006=redis弱口令
+**网络服务**: v_3001=ftp弱口令, v_3003=ssh弱口令, v_3006=telnet弱口令, v_3007=snmp弱口令
+**其他**: v_4001=zookeeper弱口令, v_4002=spark弱口令, v_Weak_Password_Vulnerability=弱口令漏洞
+
+### subTypeIn compliance子类(边界完整性)
+v_illegal_in=非法接入检测, v_internal_scan=违规外联检测, v_multi_host=多穴主机, v_wifi_route_check=无线路由设备检测, v_compliance_test=边界完整性子级
+
+### subTypeIn other子类(其他)
+v_VMware_check_other=VMware虚机检测, v_env_check_other=系统环境变更检测, v_importance_offline_other=重要设备离线检测, v_malicious_botnet_other=恶意僵尸网络, v_info_collect_other=信息收集, v_other_other=其他
 
 ### levelIn 危险级别
 1=提示, 2=低危, 3=中危, 4=高危, 5=超危`,
@@ -183,7 +232,7 @@ video(视频传输网,主要), police(公安网), internet(互联网)
           ...networkBaseProps,
           pageNum: {
             default: 1,
-            description: '页���（传入时返回分页列表，否则返回汇总统计）',
+            description: '页码（传入时返回分页列表，否则返回汇总统计）',
             type: 'number',
           },
           pageSize: { default: 10, description: '每页条数', type: 'number' },
@@ -390,7 +439,7 @@ video(视频传输网,主要), police(公安网), internet(互联网)
       description: `获取用户行为分析统计（公安网中用户违规行为按类型统计）。
 
 ### groupCodes 可选值
-- event_type: 按���件类型
+- event_type: 按事件类型
 - user_behavior: 按行为类型`,
       name: SaAnalyzerApiName.getUserActionStats,
       parameters: {
