@@ -113,7 +113,8 @@ export const SaAnalyzerManifest: BuiltinToolManifest = {
           pageSize: { default: 10, description: '每页条数（默认10）', type: 'number' },
           startTime: { description: '开始时间，格式: yyyy-MM-dd HH:mm:ss', type: 'string' },
           subTypeIn: {
-            description: '事件二级/三级类型编码',
+            description:
+              '事件子类型编码（**仅接受叶节点码**：无下级子类的末级码）。有 L3 子类的 L2 码（如 3207=暴力破解、3229=Web应用攻击、3238=APT事件等）不可直接传入，须传其全部 L3 子类码集合；无子类的 L2 码（如 3213=僵尸网络、3216=木马后门、34xx 系列）可直接传入。',
             items: { type: 'string' },
             type: 'array',
           },
@@ -187,7 +188,8 @@ v_VMware_check_other=VMware虚机检测, v_env_check_other=系统环境变更检
           pageSize: { default: 10, description: '每页条数（默认10）', type: 'number' },
           startTime: { description: '开始时间，格式: yyyy-MM-dd HH:mm:ss', type: 'string' },
           subTypeIn: {
-            description: '脆弱性二级类型',
+            description:
+              '脆弱性子类型编码（**仅接受叶节点码**：无下级子类的末级码）。password/sysvuln/compliance/other 的子码均为叶节点，可直接传入。webvuln 的通用攻击类型码（如 remote_code_exec_web、sql_inject_web 等）及厂商漏洞码（如 v_Hikvision_Video_Product_Vulnerabilities）均为叶节点，可直接传入。',
             items: { type: 'string' },
             type: 'array',
           },
