@@ -5,6 +5,14 @@
       "request": "launch",
       "name": "Next.js: debug server-side",
       "command": "pnpm run dev:next"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Server",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:next"],
+      "console": "integratedTerminal"
     }
   ],
   // 使用 IntelliSense 了解相关属性。

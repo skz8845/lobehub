@@ -16,6 +16,7 @@ import { MemoryManifest } from '@lobechat/builtin-tool-memory';
 // import { MessageManifest } from '@lobechat/builtin-tool-message';
 import { PageAgentManifest } from '@lobechat/builtin-tool-page-agent';
 import { RemoteDeviceManifest } from '@lobechat/builtin-tool-remote-device';
+import { SaAnalyzerManifest } from '@lobechat/builtin-tool-sa-analyzer';
 // import { SkillStoreManifest } from '@lobechat/builtin-tool-skill-store';
 import { SkillsManifest } from '@lobechat/builtin-tool-skills';
 import { TaskManifest } from '@lobechat/builtin-tool-task';
@@ -41,6 +42,7 @@ export const defaultToolIds = [
   LocalSystemManifest.identifier,
   CloudSandboxManifest.identifier,
   CveAnalyzerManifest.identifier,
+  SaAnalyzerManifest.identifier,
   ThreatIntelManifest.identifier,
   TopicReferenceManifest.identifier,
   AgentDocumentsManifest.identifier,
@@ -85,6 +87,7 @@ export const runtimeManagedToolIds = [
   CloudSandboxManifest.identifier,
   KnowledgeBaseManifest.identifier,
   CveAnalyzerManifest.identifier,
+  SaAnalyzerManifest.identifier,
   ThreatIntelManifest.identifier,
   LocalSystemManifest.identifier,
   MemoryManifest.identifier,
@@ -157,6 +160,12 @@ export const builtinTools: LobeBuiltinTool[] = [
     hidden: true,
     identifier: CveAnalyzerManifest.identifier,
     manifest: CveAnalyzerManifest,
+    type: 'builtin',
+  },
+  {
+    hidden: true,
+    identifier: SaAnalyzerManifest.identifier,
+    manifest: SaAnalyzerManifest,
     type: 'builtin',
   },
   {

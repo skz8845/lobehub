@@ -43,6 +43,8 @@ import { MemoryInspectors, MemoryManifest } from '@lobechat/builtin-tool-memory/
 // import { MessageInspectors, MessageManifest } from '@lobechat/builtin-tool-message/client';
 import { NotebookInspectors, NotebookManifest } from '@lobechat/builtin-tool-notebook/client';
 import { PageAgentInspectors, PageAgentManifest } from '@lobechat/builtin-tool-page-agent/client';
+import { SaAnalyzerManifest } from '@lobechat/builtin-tool-sa-analyzer';
+import { SaAnalyzerInspectors } from '@lobechat/builtin-tool-sa-analyzer/client';
 // import {
 //   SkillStoreInspectors,
 //   SkillStoreManifest,
@@ -82,6 +84,7 @@ const BuiltinToolInspectors: Record<string, Record<string, BuiltinInspector>> = 
   //   BuiltinInspector
   // >,
   [CveAnalyzerManifest.identifier]: CveAnalyzerInspectors as Record<string, BuiltinInspector>,
+  [SaAnalyzerManifest.identifier]: SaAnalyzerInspectors as Record<string, BuiltinInspector>,
   [ThreatIntelManifest.identifier]: ThreatIntelInspectors as Record<string, BuiltinInspector>,
   [GTDManifest.identifier]: GTDInspectors as Record<string, BuiltinInspector>,
   [KnowledgeBaseManifest.identifier]: KnowledgeBaseInspectors as Record<string, BuiltinInspector>,

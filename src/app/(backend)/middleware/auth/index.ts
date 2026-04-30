@@ -7,13 +7,12 @@ import { ChatErrorType } from '@lobechat/types';
 import { getServerDB } from '@/database/core/db-adaptor';
 import { type LobeChatDatabase } from '@/database/type';
 import { extractTraceContext, injectActiveTraceHeaders } from '@/libs/observability/traceparent';
-import { validateSSOToken } from '@/libs/sso';
+import { createSessionFromResponse, validateSSOToken } from '@/libs/sso';
+import { setRZZXTokens, setSSOSession } from '@/libs/sso/request-store';
+import { RZZX_APP_TOKEN_HEADER, RZZX_USER_TOKEN_HEADER } from '@/libs/sso/tokens';
 import { createErrorResponse } from '@/utils/errorResponse';
 
 type RequestOptions = { params: Promise<{ provider?: string }> };
-
-const RZZX_USER_TOKEN_HEADER = 'RZZX-USERTOKEN';
-const RZZX_APP_TOKEN_HEADER = 'RZZX-APPTOKEN';
 
 export type RequestHandler = (
   req: Request,
@@ -50,10 +49,11 @@ export const checkAuth =
     try {
       let ssoAuthorized = false;
       let ssoUserId: string | undefined;
+      let ssoResponse: Awaited<ReturnType<typeof validateSSOToken>> | undefined;
 
       // First try RZZX headers
-      const rzzxUserToken = req.headers.get(RZZX_USER_TOKEN_HEADER);
-      const rzzxAppToken = req.headers.get(RZZX_APP_TOKEN_HEADER);
+      const rzzxUserToken = req.headers.get(RZZX_USER_TOKEN_HEADER) || '';
+      const rzzxAppToken = req.headers.get(RZZX_APP_TOKEN_HEADER) || '';
 
       if (rzzxUserToken && rzzxAppToken) {
         try {
@@ -64,6 +64,7 @@ export const checkAuth =
           if (response.code === '0' || response.code === '200') {
             ssoAuthorized = true;
             ssoUserId = String(response.data.userInfo.userId);
+            ssoResponse = response;
           }
         } catch (e) {
           console.error('RZZX header validation error:', e);
@@ -76,6 +77,16 @@ export const checkAuth =
 
       if (ssoAuthorized && ssoUserId) {
         jwtPayload = { userId: ssoUserId };
+        // Populate request-scoped store for downstream code
+        setRZZXTokens(rzzxAppToken, rzzxUserToken);
+        if (ssoResponse) {
+          setSSOSession(
+            createSessionFromResponse(ssoResponse, {
+              appToken: rzzxAppToken!,
+              userToken: rzzxUserToken!,
+            }),
+          );
+        }
       } else {
         throw AgentRuntimeError.createError(ChatErrorType.Unauthorized);
       }

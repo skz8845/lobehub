@@ -49,6 +49,7 @@ import { oauthDeviceFlowRouter } from './oauthDeviceFlow';
 import { pluginRouter } from './plugin';
 import { ragEvalRouter } from './ragEval';
 import { recentRouter } from './recent';
+import { saAnalyzerRouter } from './saAnalyzer';
 import { searchRouter } from './search';
 import { sessionRouter } from './session';
 import { sessionGroupRouter } from './sessionGroup';
@@ -112,6 +113,7 @@ export const lambdaRouter = router({
   session: sessionRouter,
   sessionGroup: sessionGroupRouter,
   share: shareRouter,
+  saAnalyzer: saAnalyzerRouter,
   threatIntel: threatIntelRouter,
   thread: threadRouter,
   topic: topicRouter,

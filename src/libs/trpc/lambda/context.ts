@@ -8,6 +8,8 @@ import { getServerDB } from '@/database/core/db-adaptor';
 import { ApiKeyModel } from '@/database/models/apiKey';
 import { extractTraceContext } from '@/libs/observability/traceparent';
 import { validateSSOToken } from '@/libs/sso';
+import { setRZZXTokens, setSSOSession } from '@/libs/sso/request-store';
+import { createSessionFromResponse } from '@/libs/sso/sso-client';
 import { isApiKeyExpired, validateApiKeyFormat } from '@/utils/apiKey';
 
 // Create context logger namespace
@@ -69,6 +71,8 @@ export interface AuthContext {
   // Add OIDC authentication information
   oidcAuth?: OIDCAuth | null;
   resHeaders?: Headers;
+  rzzxAppToken?: string;
+  rzzxUserToken?: string;
   traceContext?: OtContext;
   userAgent?: string;
   userId?: string | null;
@@ -82,6 +86,8 @@ export const createContextInner = async (params?: {
   clientIp?: string | null;
   marketAccessToken?: string;
   oidcAuth?: OIDCAuth | null;
+  rzzxAppToken?: string;
+  rzzxUserToken?: string;
   traceContext?: OtContext;
   userAgent?: string;
   userId?: string | null;
@@ -97,6 +103,8 @@ export const createContextInner = async (params?: {
     traceContext: params?.traceContext,
     userAgent: params?.userAgent,
     userId: params?.userId,
+    rzzxAppToken: params?.rzzxAppToken,
+    rzzxUserToken: params?.rzzxUserToken,
   };
 };
 
@@ -138,20 +146,25 @@ export const createLambdaContext = async (request: NextRequest): Promise<LambdaC
     userAgent,
   };
 
+  const userToken = request.headers.get(RZZX_USER_TOKEN_HEADER);
+  const appToken = request.headers.get(RZZX_APP_TOKEN_HEADER);
+
   // Check SSO session
   log('Attempting SSO session authentication');
   let userId = null;
   try {
     // First try to authenticate via RZZX headers
-    const userToken = request.headers.get(RZZX_USER_TOKEN_HEADER);
-    const appToken = request.headers.get(RZZX_APP_TOKEN_HEADER);
-
     if (userToken && appToken) {
       log('Found RZZX headers, validating tokens');
       const response = await validateSSOToken({ userToken, appToken });
       if (response.code === '0' || response.code === '200') {
         userId = String(response.data.userInfo.userId);
         log('RZZX header authentication successful, userId: %s', userId);
+        // Populate request-scoped store for downstream code
+        setRZZXTokens(appToken ?? undefined, userToken ?? undefined);
+        setSSOSession(
+          createSessionFromResponse(response, { appToken: appToken!, userToken: userToken! }),
+        );
       } else {
         log('RZZX header validation failed: %s', response.msg);
       }
@@ -166,5 +179,11 @@ export const createLambdaContext = async (request: NextRequest): Promise<LambdaC
     'All authentication methods attempted, returning final context, userId: %s',
     userId || 'not authenticated',
   );
-  return createContextInner({ ...commonContext, traceContext, userId });
+  return createContextInner({
+    ...commonContext,
+    rzzxAppToken: appToken ?? undefined,
+    rzzxUserToken: userToken ?? undefined,
+    traceContext,
+    userId,
+  });
 };

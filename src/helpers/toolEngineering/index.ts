@@ -6,6 +6,7 @@ import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
 import { KnowledgeBaseManifest } from '@lobechat/builtin-tool-knowledge-base';
 import { LocalSystemManifest } from '@lobechat/builtin-tool-local-system';
 import { MemoryManifest } from '@lobechat/builtin-tool-memory';
+import { SaAnalyzerManifest } from '@lobechat/builtin-tool-sa-analyzer';
 import { ThreatIntelManifest } from '@lobechat/builtin-tool-threat-intel';
 import { WebBrowsingManifest } from '@lobechat/builtin-tool-web-browsing';
 import { alwaysOnToolIds, defaultToolIds } from '@lobechat/builtin-tools';
@@ -164,6 +165,7 @@ export const createAgentToolsEngine = (
           settingsSelectors.memoryEnabled(useUserStore.getState()),
         [WebBrowsingManifest.identifier]: searchConfig.useApplicationBuiltinSearchTool,
         [CveAnalyzerManifest.identifier]: true,
+        [SaAnalyzerManifest.identifier]: true,
         [ThreatIntelManifest.identifier]: true,
       },
     }),

@@ -919,6 +919,7 @@
   "tools.builtins.lobe-remote-device.description": "Discover and manage remote desktop device connections",
   "tools.builtins.lobe-remote-device.readme": "Manage connections to your desktop devices. List online devices, activate a device for remote operations, and check connection status.",
   "tools.builtins.lobe-remote-device.title": "Remote Device",
+  "tools.builtins.lobe-sa-analyzer.title": "Security Ops Assistant",
   "tools.builtins.lobe-skill-store.description": "Browse and install agent skills from the LobeHub marketplace. Use this when you need extended capabilities or want to install a specific skill.",
   "tools.builtins.lobe-skill-store.title": "Skill Store",
   "tools.builtins.lobe-skills.description": "Activate and use reusable skill packages",

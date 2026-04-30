@@ -919,6 +919,7 @@
   "tools.builtins.lobe-remote-device.description": "发现并管理远程桌面设备连接",
   "tools.builtins.lobe-remote-device.readme": "管理与桌面设备的连接。列出在线设备、激活设备以执行远程操作并查看连接状态。",
   "tools.builtins.lobe-remote-device.title": "远程设备",
+  "tools.builtins.lobe-sa-analyzer.title": "安全运营助手",
   "tools.builtins.lobe-skill-store.description": "从 LobeHub 技能市场浏览并安装助手技能。当你需要扩展能力或想安装特定技能时使用。",
   "tools.builtins.lobe-skill-store.title": "技能商店",
   "tools.builtins.lobe-skills.description": "激活并使用可复用的技能包",
