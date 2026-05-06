@@ -2,13 +2,9 @@
  * Tools Engineering - Unified tools processing using ToolsEngine
  */
 import { CloudSandboxManifest } from '@lobechat/builtin-tool-cloud-sandbox';
-import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
 import { KnowledgeBaseManifest } from '@lobechat/builtin-tool-knowledge-base';
 import { LocalSystemManifest } from '@lobechat/builtin-tool-local-system';
 import { MemoryManifest } from '@lobechat/builtin-tool-memory';
-import { SaAnalyzerManifest } from '@lobechat/builtin-tool-sa-analyzer';
-import { ThreatIntelManifest } from '@lobechat/builtin-tool-threat-intel';
-import { WebBrowsingManifest } from '@lobechat/builtin-tool-web-browsing';
 import { alwaysOnToolIds, defaultToolIds } from '@lobechat/builtin-tools';
 import { createEnableChecker, type PluginEnableChecker } from '@lobechat/context-engine';
 import { ToolsEngine } from '@lobechat/context-engine';
@@ -163,10 +159,10 @@ export const createAgentToolsEngine = (
         [MemoryManifest.identifier]:
           agentChatConfigSelectors.currentChatConfig(agentState).memory?.enabled ??
           settingsSelectors.memoryEnabled(useUserStore.getState()),
-        [WebBrowsingManifest.identifier]: searchConfig.useApplicationBuiltinSearchTool,
-        [CveAnalyzerManifest.identifier]: true,
-        [SaAnalyzerManifest.identifier]: true,
-        [ThreatIntelManifest.identifier]: true,
+        // [WebBrowsingManifest.identifier]: searchConfig.useApplicationBuiltinSearchTool,
+        // [CveAnalyzerManifest.identifier]: true,
+        // [SaAnalyzerManifest.identifier]: true,
+        // [ThreatIntelManifest.identifier]: true,
       },
     }),
   });
