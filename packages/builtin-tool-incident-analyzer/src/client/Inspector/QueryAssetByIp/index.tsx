@@ -6,21 +6,21 @@ import { memo } from 'react';
 
 import { highlightTextStyles, inspectorTextStyles, shinyTextStyles } from '@/styles';
 
-import type { AttributeIncidentArgs, AttributeIncidentState } from '../../..';
+import type { QueryAssetByIpArgs, QueryAssetByIpState } from '../../..';
 
-export const AttributeIncidentInspector = memo<
-  BuiltinInspectorProps<AttributeIncidentArgs, AttributeIncidentState>
+export const QueryAssetByIpInspector = memo<
+  BuiltinInspectorProps<QueryAssetByIpArgs, QueryAssetByIpState>
 >(({ args, partialArgs, isArgumentsStreaming, isLoading }) => {
-  const srcIp = args?.srcIp || partialArgs?.srcIp || '';
+  const ip = args?.ip || partialArgs?.ip || '';
 
   if (isArgumentsStreaming) {
     return (
       <div className={cx(inspectorTextStyles.root, shinyTextStyles.shinyText)}>
-        <span>归因分析</span>
-        {srcIp && (
+        <span>查询资产信息</span>
+        {ip && (
           <>
             <span>: </span>
-            <span className={highlightTextStyles.danger}>{srcIp}</span>
+            <span className={highlightTextStyles.info}>{ip}</span>
           </>
         )}
       </div>
@@ -29,15 +29,10 @@ export const AttributeIncidentInspector = memo<
 
   return (
     <div className={cx(inspectorTextStyles.root, isLoading && shinyTextStyles.shinyText)}>
-      <span>归因分析</span>
-      {srcIp && (
-        <>
-          <span>: </span>
-          <span className={highlightTextStyles.danger}>{srcIp}</span>
-        </>
-      )}
+      <span>查询资产信息: </span>
+      {ip && <span className={highlightTextStyles.info}>{ip}</span>}
     </div>
   );
 });
 
-AttributeIncidentInspector.displayName = 'AttributeIncidentInspector';
+QueryAssetByIpInspector.displayName = 'QueryAssetByIpInspector';

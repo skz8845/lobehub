@@ -7,7 +7,7 @@ import { type ServerRuntimeRegistration } from './types';
 
 const log = debug('lobe-server:incident-analyzer');
 
-// ─── SA API client (shared with sa-analyzer) ─────────────────────────────────
+// ─── SA API client ────────────────────────────────────────────────────────────
 
 interface SaRuntimeContext {
   rzzxAppToken?: string;
@@ -23,21 +23,19 @@ function saSignKey() {
 }
 
 function generateSign(nonce: string, timestamp: number, queryParams: string, body: string): string {
-  const signKey = saSignKey();
-  const source = signKey + nonce + timestamp + queryParams + body;
+  const source = saSignKey() + nonce + timestamp + queryParams + body;
   return createHash('md5').update(source, 'utf8').digest('hex');
 }
 
-function generateHeaders(ctx: SaRuntimeContext | undefined, queryParams: string, body: string) {
+function makeHeaders(ctx: SaRuntimeContext | undefined, queryParams: string, body: string) {
   const timestamp = Date.now();
   const nonce = Math.random().toString(36).slice(2, 15);
-  const sign = generateSign(nonce, timestamp, queryParams, body);
   return {
     'Content-Type': 'application/json',
     'RZZX-APPTOKEN': ctx?.rzzxAppToken ?? '',
     'RZZX-USERTOKEN': ctx?.rzzxUserToken ?? '',
     'nonce': nonce,
-    'sign': sign,
+    'sign': generateSign(nonce, timestamp, queryParams, body),
     'timestamp': timestamp.toString(),
   };
 }
@@ -45,15 +43,18 @@ function generateHeaders(ctx: SaRuntimeContext | undefined, queryParams: string,
 async function saPost(ctx: SaRuntimeContext | undefined, path: string, body: Record<string, any>) {
   const url = `${saApiUrl()}${path}`;
   const bodyStr = JSON.stringify(body);
-  const headers = generateHeaders(ctx, '', bodyStr);
   log('SA POST %s', path);
-  const res = await fetch(url, { body: bodyStr, headers, method: 'POST' });
+  const res = await fetch(url, {
+    body: bodyStr,
+    headers: makeHeaders(ctx, '', bodyStr),
+    method: 'POST',
+  });
   if (!res.ok) throw new Error(`SA API ${res.status} ${path}`);
   const json = await res.json();
   return json.data;
 }
 
-// ─── MISP client (shared with threat-intel) ───────────────────────────────────
+// ─── MISP client ─────────────────────────────────────────────────────────────
 
 function mispBaseUrl() {
   return (process.env.MISP_BASE_URL ?? 'https://192.168.10.142:3443').replace(/\/$/, '');
@@ -68,7 +69,6 @@ async function mispPost(path: string, body: Record<string, any>): Promise<any> {
   const verifySsl = process.env.MISP_VERIFY_SSL === 'true';
   const prev = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
   if (!verifySsl) process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
   try {
     const res = await fetch(url, {
       body: JSON.stringify(body),
@@ -92,7 +92,9 @@ async function mispPost(path: string, body: Record<string, any>): Promise<any> {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const LEVEL: Record<number, string> = { 1: '提示', 2: '低危', 3: '中危', 4: '高危', 5: '超危' };
+const STATUS: Record<number, string> = { 1: '未消除', 2: '已处置', 3: '不处置' };
 const lv = (l?: number) => (l != null ? (LEVEL[l] ?? `L${l}`) : '未知');
+const st = (s?: number) => (s != null ? (STATUS[s] ?? '') : '');
 
 const IP_RE = /^(?:\d{1,3}\.){3}\d{1,3}$|^[\d:A-F][\dA-F]*:[\d:A-F]+$/i;
 const HASH_RE = /^[0-9a-f]{32}$|^[0-9a-f]{40}$|^[0-9a-f]{64}$/i;
@@ -106,207 +108,209 @@ function detectType(value: string): string {
   return 'unknown';
 }
 
-// ATT&CK tactic mapping from event subtype
-const TTP_MAP: Record<string, string> = {
-  '3205': '侦察-主动扫描',
-  '3207': '凭据访问-暴力破解',
-  '3213': '命令控制-僵尸网络',
-  '3216': '持久化-木马后门',
-  '3225': '影响-应用层DDoS',
-  '3229': '初始访问-Web应用攻击',
-  '3230': '执行-漏洞利用渗透',
-  '3231': '命令控制-恶意程序与C2',
-  '3232': '命令控制-隐蔽隧道',
-  '3233': '初始访问-邮件协议攻击',
-  '3234': '影响-网络层DoS',
-  '3236': '侦察-异常扫描',
-  '3237': '持久化-后门攻击',
-  '3238': '持续威胁-APT事件',
-  '3239': '命令控制-恶意通信',
-};
-
-const APT_MAP: Record<string, { id: string; name: string; techniques: string[] }> = {
-  '323801': {
-    id: 'APT32',
-    name: '海莲花 (APT32/OceanLotus)',
-    techniques: ['鱼叉钓鱼', 'Cobalt Strike', 'PowerShell', '水坑攻击'],
-  },
-  '323804': {
-    id: 'APT30',
-    name: 'APT30',
-    techniques: ['长期潜伏', '东南亚政府目标', '自研恶意软件'],
-  },
-  '323806': {
-    id: 'Lazarus',
-    name: 'Lazarus Group',
-    techniques: ['金融目标', '供应链攻击', '自研恶意软件', 'WannaCry'],
-  },
-  '323807': {
-    id: 'BITTER',
-    name: 'BITTER',
-    techniques: ['南亚政府目标', '鱼叉邮件', '.NET工具', 'Android恶意软件'],
-  },
-  '323809': {
-    id: 'APT10',
-    name: 'APT10 (Stone Panda)',
-    techniques: ['托管服务商攻击', '网络间谍', 'PlugX', 'RedLeaves'],
-  },
-  '323813': {
-    id: 'APT28',
-    name: 'APT28 (Fancy Bear)',
-    techniques: ['钓鱼攻击', '凭据窃取', '政府/军事目标', 'X-Agent'],
-  },
-};
+function formatEvent(r: any): string {
+  return [
+    `### ${r.eventName ?? '未知'} [${lv(r.level)}]`,
+    `**时间**: ${r.time ?? '未知'} | **网络**: ${r.networkType ?? '未知'} | **状态**: ${st(r.status)}`,
+    r.srcIp ? `**来源**: ${r.srcIp}${r.srcPort ? `:${r.srcPort}` : ''}` : '',
+    r.dstIp ? `**目标**: ${r.dstIp}${r.dstPort ? `:${r.dstPort}` : ''}` : '',
+    r.devName ? `**设备**: ${r.devName}` : '',
+    r.message ? `**详情**: ${r.message}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
 
 // ─── Runtime factory ──────────────────────────────────────────────────────────
 
 const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
-  queryAttackerEvents: async (args: any) => {
+  queryEventDetail: async (args: any) => {
     try {
-      const data = await saPost(ctx, '/event/page', {
-        endTime: args.endTime ?? '',
-        levelIn: args.levelIn ?? [],
-        networkTypeIn: args.networkTypeIn ?? ['police', 'internet', 'video', 'mobilePolice'],
-        pageNum: args.pageNum ?? 1,
-        pageSize: args.pageSize ?? 10,
-        srcIpIn: [args.srcIp],
-        startTime: args.startTime ?? '',
-        subTypeIn: [],
-        typeIn: [],
-      });
-      const records: any[] = data?.records ?? [];
-      if (!records.length) {
-        return {
-          content: `未找到来自 ${args.srcIp} 的攻击事件记录。`,
-          data,
-          success: true,
-        };
+      const { eventId } = args;
+      log('queryEventDetail %s', eventId);
+
+      // Try detail endpoint first, fall back to page query by id
+      let data: any = null;
+      try {
+        data = await saPost(ctx, '/event/detail', { id: eventId, uuid: eventId });
+      } catch {
+        // Fall back: search page with id filter
+        const pageData = await saPost(ctx, '/event/page', {
+          id: eventId,
+          networkTypeIn: ['police', 'internet', 'video', 'mobilePolice'],
+          pageNum: 1,
+          pageSize: 1,
+        });
+        data = pageData?.records?.[0] ?? null;
       }
-      const rows = records.map(
-        (r: any) =>
-          `### ${r.eventName ?? '未知'} [${lv(r.level)}]\n` +
-          `**时间**: ${r.time ?? '未知'} | **网络**: ${r.networkType ?? '未知'}\n` +
-          (r.dstIp ? `**目标**: ${r.dstIp}${r.dstPort ? `:${r.dstPort}` : ''}\n` : '') +
-          (r.message ? `**详情**: ${r.message}` : ''),
-      );
-      return {
-        content: `## ${args.srcIp} 历史攻击事件（共${data?.total ?? records.length}条，第${data?.current ?? 1}页）\n\n${rows.join('\n\n---\n\n')}`,
-        data,
-        success: true,
-      };
-    } catch (e) {
-      return { content: `查询攻击者历史事件失败: ${(e as Error).message}`, success: false };
-    }
-  },
 
-  analyzeAttackBehavior: async (args: any) => {
-    try {
-      const nets = args.networkTypeIn ?? ['police', 'internet', 'video', 'mobilePolice'];
-
-      // Query events for behavior analysis (larger page to capture patterns)
-      const data = await saPost(ctx, '/event/page', {
-        endTime: args.endTime ?? '',
-        networkTypeIn: nets,
-        pageNum: 1,
-        pageSize: 200,
-        srcIpIn: [args.srcIp],
-        startTime: args.startTime ?? '',
-        subTypeIn: [],
-        typeIn: [],
-      });
-
-      const records: any[] = data?.records ?? [];
-      const total: number = data?.total ?? records.length;
-
-      if (!records.length) {
+      if (!data) {
         return {
-          content: `未找到来自 ${args.srcIp} 的攻击记录，无法进行行为分析。`,
+          content: `未找到事件 ID "${eventId}" 的记录。`,
           data: null,
           success: true,
         };
       }
 
-      // Analyze level distribution
-      const levelDist: Record<string, number> = {};
-      const typeDist: Record<string, number> = {};
-      const networkDist: Record<string, number> = {};
-      const times: string[] = [];
+      const lines = [
+        `## 安全事件详情 [${lv(data.level)}]`,
+        '',
+        `**事件名称**: ${data.eventName ?? '未知'}`,
+        `**事件 ID**: ${data.id ?? eventId}`,
+        `**时间**: ${data.time ?? '未知'}`,
+        `**网络**: ${data.networkType ?? '未知'}`,
+        `**状态**: ${st(data.status)}`,
+        '',
+        data.srcIp ? `**攻击来源**: ${data.srcIp}${data.srcPort ? `:${data.srcPort}` : ''}` : '',
+        data.dstIp ? `**攻击目标**: ${data.dstIp}${data.dstPort ? `:${data.dstPort}` : ''}` : '',
+        data.devIp ? `**监测设备**: ${data.devName ?? ''} (${data.devIp})` : '',
+        '',
+        data.message ? `**详情描述**: ${data.message}` : '',
+      ]
+        .filter((l) => l !== undefined)
+        .join('\n');
 
-      for (const r of records) {
-        const lvKey = LEVEL[r.level] ?? `L${r.level}`;
-        levelDist[lvKey] = (levelDist[lvKey] ?? 0) + 1;
+      return { content: lines, data, success: true };
+    } catch (e) {
+      return { content: `查询事件详情失败: ${(e as Error).message}`, success: false };
+    }
+  },
 
-        const subType = String(r.subType ?? r.type ?? '');
-        const typeName = TTP_MAP[subType] ?? r.eventName ?? `类型${subType}`;
-        typeDist[typeName] = (typeDist[typeName] ?? 0) + 1;
+  queryIpEvents: async (args: any) => {
+    try {
+      const { srcIp: ip, ipRole = 'src' } = args;
+      const nets = args.networkTypeIn ?? ['police', 'internet', 'video', 'mobilePolice'];
 
-        const net = r.networkType ?? 'unknown';
-        networkDist[net] = (networkDist[net] ?? 0) + 1;
+      // Map ipRole to the correct SA API parameter
+      const ipParam: Record<string, any> = {};
+      if (ipRole === 'src') ipParam.srcIp = ip;
+      else if (ipRole === 'dst') ipParam.dstIp = ip;
+      else if (ipRole === 'dev') ipParam.devIp = ip;
 
-        if (r.time) times.push(r.time);
+      const data = await saPost(ctx, '/event/page', {
+        endTime: args.endTime ?? '',
+        levelIn: args.levelIn ?? [],
+        networkTypeIn: nets,
+        pageNum: args.pageNum ?? 1,
+        pageSize: args.pageSize ?? 10,
+        startTime: args.startTime ?? '',
+        subTypeIn: [],
+        typeIn: [],
+        ...ipParam,
+      });
+
+      const records: any[] = data?.records ?? [];
+      const roleLabel = ipRole === 'src' ? '攻击来源' : ipRole === 'dst' ? '攻击目标' : '监测设备';
+
+      if (!records.length) {
+        return {
+          content: `未找到 ${ip}（${roleLabel}）关联的安全事件记录。`,
+          data,
+          success: true,
+        };
       }
 
-      times.sort();
-      const firstSeen = times[0];
-      const lastSeen = times.at(-1);
+      const rows = records.map(formatEvent);
+      return {
+        content: `## ${ip} 关联事件（${roleLabel}，共 ${data?.total ?? records.length} 条，第 ${data?.current ?? 1} 页）\n\n${rows.join('\n\n---\n\n')}`,
+        data,
+        success: true,
+      };
+    } catch (e) {
+      return { content: `查询 IP 关联事件失败: ${(e as Error).message}`, success: false };
+    }
+  },
 
-      const topAttackTypes = Object.entries(typeDist)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8)
-        .map(([attackType, count]) => ({
-          attackType,
-          count,
-          level: '',
-          subTypes: [],
-        }));
+  queryAssetByIp: async (args: any) => {
+    try {
+      const { ip, networkType } = args;
+      log('queryAssetByIp %s', ip);
 
-      // Identify unique targets
-      const targets = new Set(records.map((r: any) => r.dstIp).filter(Boolean));
+      const data = await saPost(ctx, '/asset/page', {
+        ip,
+        networkType: networkType ?? '',
+        pageNum: 1,
+        pageSize: 5,
+      });
 
-      // Map to ATT&CK tactics
-      const primaryTactics = [
-        ...new Set(
-          topAttackTypes
-            .map((t) => {
-              const parts = t.attackType.split('-');
-              return parts.length > 1 ? parts[0] : '';
-            })
-            .filter(Boolean),
+      const records: any[] = data?.records ?? (Array.isArray(data) ? data : []);
+
+      if (!records.length) {
+        return {
+          content: `未找到 IP ${ip} 的资产记录。该 IP 可能不在资产管理范围内。`,
+          data: [],
+          success: true,
+        };
+      }
+
+      const lines = [
+        `## ${ip} 资产信息`,
+        '',
+        ...records.map((r: any) =>
+          [
+            `**IP**: ${r.ip ?? ip}`,
+            r.host ? `**主机名**: ${r.host}` : '',
+            r.os ? `**操作系统**: ${r.os}` : '',
+            r.assetDeviceModel ? `**设备型号**: ${r.assetDeviceModel}` : '',
+            r.networkType ? `**所属网络**: ${r.networkType}` : '',
+            r.openPorts ? `**开放端口**: ${r.openPorts}` : '',
+            r.status ? `**在线状态**: ${r.status}` : '',
+          ]
+            .filter(Boolean)
+            .join(' | '),
         ),
       ];
 
-      const profile = {
-        attackedTargets: targets.size,
-        firstSeen,
-        lastSeen,
-        levelDistribution: levelDist,
-        networkDistribution: networkDist,
-        primaryTactics,
-        srcIp: args.srcIp,
-        topAttackTypes,
-        totalEvents: total,
-      };
-
-      const lines = [
-        `## ${args.srcIp} 攻击行为分析\n`,
-        `- **总攻击次数**: ${total}（采样 ${records.length} 条）`,
-        `- **攻击目标数**: ${targets.size}`,
-        `- **首次攻击**: ${firstSeen ?? '未知'}`,
-        `- **最近攻击**: ${lastSeen ?? '未知'}`,
-        '',
-        '### 攻击手法分布 (TTP)',
-        ...topAttackTypes.map((t) => `- **${t.attackType}**: ${t.count} 次`),
-        '',
-        '### ATT&CK 战术链',
-        primaryTactics.length > 0 ? primaryTactics.join(' → ') : '暂无充分数据',
-        '',
-        '### 危险级别分布',
-        ...Object.entries(levelDist).map(([k, v]) => `- ${k}: ${v} 次`),
-      ];
-
-      return { content: lines.join('\n'), data: profile, success: true };
+      return { content: lines.join('\n'), data: records, success: true };
     } catch (e) {
-      return { content: `分析攻击行为失败: ${(e as Error).message}`, success: false };
+      return { content: `查询资产信息失败: ${(e as Error).message}`, success: false };
+    }
+  },
+
+  queryIpVulnerabilities: async (args: any) => {
+    try {
+      const data = await saPost(ctx, '/vulnerability/page/ext', {
+        endTime: args.endTime ?? '',
+        ip: args.ip,
+        levelIn: args.levelIn ?? [],
+        networkTypeIn: args.networkTypeIn ?? ['video', 'police', 'internet'],
+        pageNum: args.pageNum ?? 1,
+        pageSize: args.pageSize ?? 10,
+        startTime: args.startTime ?? '',
+        subTypeIn: args.subTypeIn ?? [],
+        typeIn: args.typeIn ?? [],
+      });
+
+      const records: any[] = data?.records ?? [];
+      if (!records.length) {
+        return {
+          content: `未找到 ${args.ip} 的脆弱性记录。`,
+          data,
+          success: true,
+        };
+      }
+
+      const rows = records.map((r: any) => {
+        const ids = [r.cve, r.cnnvd, r.cnvd].filter(Boolean).join(' / ') || '无编号';
+        return [
+          `### ${r.name ?? '未知漏洞'} [${lv(r.level)}]`,
+          `**编号**: ${ids}`,
+          r.type ? `**类型**: ${r.type}` : '',
+          r.ip ? `**IP**: ${r.ip}` : '',
+          r.message ? `**描述**: ${r.message}` : '',
+          r.time ? `**时间**: ${r.time}` : '',
+        ]
+          .filter(Boolean)
+          .join('\n');
+      });
+
+      return {
+        content: `## ${args.ip} 脆弱性（共 ${data?.total ?? records.length} 条，第 ${data?.current ?? 1} 页）\n\n${rows.join('\n\n---\n\n')}`,
+        data,
+        success: true,
+      };
+    } catch (e) {
+      return { content: `查询脆弱性失败: ${(e as Error).message}`, success: false };
     }
   },
 
@@ -321,7 +325,7 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
 
       if (!rawAttrs.length) {
         return {
-          content: `未找到 "${indicator}" 的威胁情报记录。`,
+          content: `未找到 "${indicator}" 的威胁情报记录，该指标暂无已知威胁记录。`,
           data: { records: [], type },
           success: true,
         };
@@ -352,16 +356,22 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
 
       const iocCount = records.filter((r) => r.primaryAttribute.to_ids).length;
       const lines = [
-        `## 威胁情报: ${indicator} (${type})\n`,
-        `共 **${records.length}** 条记录，其中 **${iocCount}** 条为已确认 IOC\n`,
-        ...records
-          .slice(0, 5)
-          .map(
-            (r) =>
-              `### 事件 ${r.event_id}${r.event?.info ? ` — ${r.event.info}` : ''}\n` +
-              `- **类型**: ${r.primaryAttribute.type} | **分类**: ${r.primaryAttribute.category}\n` +
-              `- **IOC**: ${r.primaryAttribute.to_ids ? '✅ 已确认' : '❌ 未确认'}`,
-          ),
+        `## 威胁情报: ${indicator} (${type})`,
+        '',
+        `共 **${records.length}** 条记录，其中 **${iocCount}** 条为已确认 IOC`,
+        '',
+        ...records.slice(0, 5).map((r) => {
+          const p = r.primaryAttribute;
+          const ev = r.event;
+          return [
+            `### 事件 ${r.event_id}${ev?.info ? ` — ${ev.info}` : ''}`,
+            `- **类型**: ${p.type} | **分类**: ${p.category} | **IOC**: ${p.to_ids ? '✅ 已确认' : '❌ 未确认'}`,
+            p.comment ? `- **备注**: ${p.comment}` : '',
+            p.tags?.length ? `- **标签**: ${p.tags.map((t: any) => t.name).join(', ')}` : '',
+          ]
+            .filter(Boolean)
+            .join('\n');
+        }),
       ];
 
       return {
@@ -375,348 +385,18 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
       return { content: `查询威胁情报失败: ${(e as Error).message}`, success: false };
     }
   },
-
-  buildAttackerProfile: async (args: any) => {
-    try {
-      const nets = args.networkTypeIn ?? ['police', 'internet', 'video', 'mobilePolice'];
-
-      // Query events for profile
-      const evData = await saPost(ctx, '/event/page', {
-        endTime: args.endTime ?? '',
-        networkTypeIn: nets,
-        pageNum: 1,
-        pageSize: 200,
-        srcIpIn: [args.srcIp],
-        startTime: args.startTime ?? '',
-        subTypeIn: [],
-        typeIn: [],
-      });
-
-      const records: any[] = evData?.records ?? [];
-      const total: number = evData?.total ?? records.length;
-
-      // Query attack targets (top IPs)
-      let targetItems: any[] = [];
-      try {
-        const targetData = await saPost(ctx, '/policeNetwork/view/attackedTop', {
-          endTime: args.endTime ?? '',
-          networkTypes: nets.includes('police') ? ['police'] : nets.slice(0, 1),
-          startTime: args.startTime ?? '',
-        });
-        targetItems = Array.isArray(targetData) ? targetData : [];
-      } catch {
-        // target query is best-effort
-      }
-
-      // Query MISP for this IP
-      let intelCount = 0;
-      try {
-        const mispResp = await mispPost('/attributes/restSearch', { value: args.srcIp });
-        intelCount = (mispResp?.response?.Attribute ?? []).length;
-      } catch {
-        // intel query is best-effort
-      }
-
-      const times = records
-        .map((r: any) => r.time)
-        .filter(Boolean)
-        .sort();
-      const typeDist: Record<string, number> = {};
-      const levelDist: Record<string, number> = {};
-      const targets = new Set<string>();
-
-      for (const r of records) {
-        const subType = String(r.subType ?? r.type ?? '');
-        const typeName = TTP_MAP[subType] ?? r.eventName ?? `类型${subType}`;
-        typeDist[typeName] = (typeDist[typeName] ?? 0) + 1;
-
-        const lvKey = LEVEL[r.level] ?? `L${r.level}`;
-        levelDist[lvKey] = (levelDist[lvKey] ?? 0) + 1;
-
-        if (r.dstIp) targets.add(r.dstIp);
-      }
-
-      const topAttackTypes = Object.entries(typeDist)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 8)
-        .map(([attackType, count]) => ({ attackType, count, level: '', subTypes: [] }));
-
-      const primaryTactics = [
-        ...new Set(topAttackTypes.map((t) => t.attackType.split('-')[0]).filter(Boolean)),
-      ];
-
-      // Calculate threat score
-      let score = 0;
-      if (total > 100) score += 20;
-      else if (total > 20) score += 10;
-      if (intelCount > 0) score += 40;
-      const hasHighSeverity = records.some((r: any) => r.level >= 4);
-      if (hasHighSeverity) score += 20;
-      if (targets.size > 10) score += 10;
-      if (typeDist['持续威胁-APT事件']) score += 10;
-      score = Math.min(score, 100);
-
-      const attackedTargets = targetItems
-        .slice(0, 10)
-        .map((t: any) => ({
-          dstIp: t.dstIp ?? t.dev_ip ?? '',
-          dstIpDirection: t.dstIpDirection ?? '',
-          eventCount: t.eventCount ?? t.riskCount ?? 0,
-        }))
-        .filter((t) => t.dstIp);
-
-      const behaviorSummary = {
-        attackedTargets: targets.size,
-        firstSeen: times[0],
-        lastSeen: times.at(-1),
-        levelDistribution: levelDist,
-        networkDistribution: {},
-        primaryTactics,
-        srcIp: args.srcIp,
-        topAttackTypes,
-        totalEvents: total,
-      };
-
-      const profile = {
-        attackedTargets,
-        behaviorSummary,
-        intelRecords: intelCount,
-        srcIp: args.srcIp,
-        threatScore: score,
-      };
-
-      const lines = [
-        `## 攻击者画像: ${args.srcIp}\n`,
-        `### 威胁评分: **${score}/100**`,
-        '',
-        `| 维度 | 数据 |`,
-        `|------|------|`,
-        `| 总攻击次数 | ${total} |`,
-        `| 攻击目标数 | ${targets.size} |`,
-        `| 威胁情报命中 | ${intelCount > 0 ? `${intelCount} 条` : '未命中'} |`,
-        `| 首次攻击 | ${times[0] ?? '未知'} |`,
-        `| 最近攻击 | ${times.at(-1) ?? '未知'} |`,
-        '',
-        '### 主要攻击手法',
-        ...topAttackTypes.slice(0, 5).map((t) => `- ${t.attackType}: ${t.count} 次`),
-      ];
-
-      return { content: lines.join('\n'), data: profile, success: true };
-    } catch (e) {
-      return { content: `构建攻击者画像失败: ${(e as Error).message}`, success: false };
-    }
-  },
-
-  queryAttackedTargets: async (args: any) => {
-    try {
-      const nets = args.networkTypeIn ?? ['police', 'internet'];
-
-      // Query events to extract targets
-      const data = await saPost(ctx, '/event/page', {
-        endTime: args.endTime ?? '',
-        networkTypeIn: nets,
-        pageNum: args.pageNum ?? 1,
-        pageSize: args.pageSize ?? 20,
-        srcIpIn: [args.srcIp],
-        startTime: args.startTime ?? '',
-        subTypeIn: [],
-        typeIn: [],
-      });
-
-      const records: any[] = data?.records ?? [];
-      if (!records.length) {
-        return {
-          content: `未找到来自 ${args.srcIp} 的攻击目标记录。`,
-          data: { items: [], total: 0 },
-          success: true,
-        };
-      }
-
-      // Aggregate by dstIp
-      const targetMap = new Map<string, number>();
-      for (const r of records) {
-        if (r.dstIp) {
-          targetMap.set(r.dstIp, (targetMap.get(r.dstIp) ?? 0) + 1);
-        }
-      }
-
-      const items = [...targetMap.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .map(([dstIp, eventCount]) => ({ dstIp, eventCount }));
-
-      const rows = items
-        .slice(0, 10)
-        .map((t, i) => `| ${i + 1} | ${t.dstIp} | ${t.eventCount} |`)
-        .join('\n');
-
-      return {
-        content: `## ${args.srcIp} 攻击目标（共 ${items.length} 个）\n\n| 排名 | 目标IP | 攻击次数 |\n|------|--------|----------|\n${rows}`,
-        data: { items, total: data?.total ?? items.length },
-        success: true,
-      };
-    } catch (e) {
-      return { content: `查询被攻击目标失败: ${(e as Error).message}`, success: false };
-    }
-  },
-
-  attributeIncident: async (args: any) => {
-    try {
-      const nets = args.networkTypeIn ?? ['police', 'internet', 'video', 'mobilePolice'];
-      const { srcIp, indicators = [] } = args;
-
-      // Collect evidence
-      const evidence: string[] = [];
-      const aptCandidates: Array<{
-        groupId: string;
-        groupName: string;
-        confidence: 'high' | 'medium' | 'low';
-        matchedTechniques: string[];
-        score: number;
-      }> = [];
-
-      // Query events for TTP analysis
-      let records: any[] = [];
-      let total = 0;
-      if (srcIp) {
-        try {
-          const evData = await saPost(ctx, '/event/page', {
-            endTime: args.endTime ?? '',
-            networkTypeIn: nets,
-            pageNum: 1,
-            pageSize: 200,
-            srcIpIn: [srcIp],
-            startTime: args.startTime ?? '',
-            subTypeIn: [],
-            typeIn: [],
-          });
-          records = evData?.records ?? [];
-          total = evData?.total ?? records.length;
-        } catch {
-          /* best-effort */
-        }
-      }
-
-      // Find APT subtype codes in the events
-      const foundAptCodes = new Set<string>();
-      for (const r of records) {
-        const st = String(r.subType ?? '');
-        if (APT_MAP[st]) foundAptCodes.add(st);
-      }
-
-      // Score APT groups by matched techniques
-      for (const [code, aptInfo] of Object.entries(APT_MAP)) {
-        let score = 0;
-        const matchedTechniques: string[] = [];
-
-        if (foundAptCodes.has(code)) {
-          score += 60;
-          matchedTechniques.push(`直接APT事件标记 (${code})`);
-          evidence.push(`检测到 ${aptInfo.name} 关联事件标记`);
-        }
-
-        if (score > 0) {
-          aptCandidates.push({
-            confidence: score >= 60 ? 'high' : score >= 30 ? 'medium' : 'low',
-            groupId: aptInfo.id,
-            groupName: aptInfo.name,
-            matchedTechniques,
-            score,
-          });
-        }
-      }
-
-      // MISP evidence for srcIp and indicators
-      const allIndicators = [srcIp, ...indicators].filter(Boolean);
-      let mispHits = 0;
-      for (const ind of allIndicators) {
-        try {
-          const resp = await mispPost('/attributes/restSearch', { value: ind });
-          const attrs = resp?.response?.Attribute ?? [];
-          if (attrs.length > 0) {
-            mispHits += attrs.length;
-            evidence.push(`威胁情报命中: ${ind} (${attrs.length} 条记录)`);
-          }
-        } catch {
-          /* best-effort */
-        }
-      }
-
-      if (mispHits > 0) evidence.push(`共命中 ${mispHits} 条威胁情报记录`);
-      if (total > 0) evidence.push(`历史攻击事件 ${total} 次`);
-      if (records.some((r) => r.level >= 4))
-        evidence.push('包含高危/超危级别攻击事件，具有明确攻击意图');
-
-      aptCandidates.sort((a, b) => b.score - a.score);
-
-      const overallConfidence: 'high' | 'medium' | 'low' =
-        aptCandidates.length > 0 && aptCandidates[0].confidence === 'high'
-          ? 'high'
-          : mispHits > 0 || aptCandidates.length > 0
-            ? 'medium'
-            : 'low';
-
-      const summaryParts = [
-        srcIp ? `来自 ${srcIp} 的攻击活动` : '本次安全事件',
-        total > 0 ? `涉及 ${total} 次历史攻击事件` : '',
-        aptCandidates.length > 0
-          ? `与 ${aptCandidates[0].groupName} 等 APT 组织的 TTP 存在重合`
-          : '未直接关联已知 APT 组织',
-        mispHits > 0 ? `在威胁情报平台命中 ${mispHits} 条记录` : '威胁情报平台未见相关记录',
-      ]
-        .filter(Boolean)
-        .join('，');
-
-      const attribution = {
-        aptGroups: aptCandidates.slice(0, 3).map(({ score: _score, ...rest }) => rest),
-        confidence: overallConfidence,
-        evidence: evidence.slice(0, 10),
-        summary: summaryParts + '。',
-      };
-
-      const lines = [
-        `## 归因分析报告\n`,
-        `**研判对象**: ${(srcIp ?? indicators.join(', ')) || '未指定'}`,
-        `**归因置信度**: ${{ high: '高', medium: '中', low: '低' }[overallConfidence]}`,
-        '',
-        `### 结论摘要`,
-        attribution.summary,
-        '',
-        aptCandidates.length > 0
-          ? `### APT 组织关联\n${aptCandidates
-              .slice(0, 3)
-              .map(
-                (g) =>
-                  `**${g.groupName}** (${g.confidence === 'high' ? '高' : g.confidence === 'medium' ? '中' : '低'}置信度)\n` +
-                  `- 匹配技术: ${g.matchedTechniques.join(', ')}`,
-              )
-              .join('\n\n')}`
-          : '### APT 组织关联\n暂未发现直接 APT 组织关联证据',
-        '',
-        '### 关键证据',
-        ...evidence.map((e) => `- ${e}`),
-      ];
-
-      return { content: lines.join('\n'), data: attribution, success: true };
-    } catch (e) {
-      return { content: `归因分析失败: ${(e as Error).message}`, success: false };
-    }
-  },
 });
 
 type IncidentAnalyzerRuntime = ReturnType<typeof createIncidentAnalyzerRuntime>;
 
-const incidentAnalyzerRuntimeFactory = {
-  createWithTokens: (tokens: { appToken?: string; userToken?: string }) =>
+export const incidentAnalyzerRuntime: ServerRuntimeRegistration & {
+  createWithTokens: (tokens: { appToken?: string; userToken?: string }) => IncidentAnalyzerRuntime;
+} = {
+  createWithTokens: (tokens) =>
     createIncidentAnalyzerRuntime({
       rzzxAppToken: tokens.appToken,
       rzzxUserToken: tokens.userToken,
     }),
-};
-
-export const incidentAnalyzerRuntime: ServerRuntimeRegistration & {
-  createWithTokens: (tokens: { appToken?: string; userToken?: string }) => IncidentAnalyzerRuntime;
-} = {
-  createWithTokens: incidentAnalyzerRuntimeFactory.createWithTokens,
   factory: (context?: any) =>
     createIncidentAnalyzerRuntime({
       rzzxAppToken: context?.rzzxAppToken,

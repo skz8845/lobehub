@@ -22,27 +22,52 @@ class IncidentAnalyzerExecutor extends BaseExecutor<typeof IncidentAnalyzerApiNa
   readonly identifier = IncidentAnalyzerIdentifier;
   protected readonly apiEnum = IncidentAnalyzerApiName;
 
-  queryAttackerEvents = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
+  queryEventDetail = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
     try {
-      const r = await lambdaClient.incidentAnalyzer.queryAttackerEvents.mutate(p);
-      if (!r.success) return r as BuiltinToolResult;
-      const records = (r as any).data?.records ?? [];
-      return makeResult(r, {
-        records,
-        srcIp: p.srcIp,
-        total: (r as any).data?.total ?? records.length,
-      });
+      const r = await lambdaClient.incidentAnalyzer.queryEventDetail.mutate(p);
+      return makeResult(r, { event: (r as any).data ?? null, eventId: p.eventId });
     } catch (e) {
-      return errResult('查询攻击者历史事件失败', e);
+      return errResult('查询事件详情失败', e);
     }
   };
 
-  analyzeAttackBehavior = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
+  queryIpEvents = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
     try {
-      const r = await lambdaClient.incidentAnalyzer.analyzeAttackBehavior.mutate(p);
-      return makeResult(r, { profile: (r as any).data, srcIp: p.srcIp });
+      const r = await lambdaClient.incidentAnalyzer.queryIpEvents.mutate(p);
+      if (!r.success) return r as BuiltinToolResult;
+      const records = (r as any).data?.records ?? [];
+      return makeResult(r, {
+        ip: p.srcIp,
+        ipRole: p.ipRole ?? 'src',
+        records,
+        total: (r as any).data?.total ?? records.length,
+      });
     } catch (e) {
-      return errResult('分析攻击行为失败', e);
+      return errResult('查询 IP 关联事件失败', e);
+    }
+  };
+
+  queryAssetByIp = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
+    try {
+      const r = await lambdaClient.incidentAnalyzer.queryAssetByIp.mutate(p);
+      return makeResult(r, { assets: (r as any).data ?? [], ip: p.ip });
+    } catch (e) {
+      return errResult('查询资产信息失败', e);
+    }
+  };
+
+  queryIpVulnerabilities = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
+    try {
+      const r = await lambdaClient.incidentAnalyzer.queryIpVulnerabilities.mutate(p);
+      if (!r.success) return r as BuiltinToolResult;
+      const records = (r as any).data?.records ?? [];
+      return makeResult(r, {
+        ip: p.ip,
+        records,
+        total: (r as any).data?.total ?? records.length,
+      });
+    } catch (e) {
+      return errResult('查询脆弱性失败', e);
     }
   };
 
@@ -59,39 +84,6 @@ class IncidentAnalyzerExecutor extends BaseExecutor<typeof IncidentAnalyzerApiNa
       });
     } catch (e) {
       return errResult('查询威胁情报失败', e);
-    }
-  };
-
-  buildAttackerProfile = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
-    try {
-      const r = await lambdaClient.incidentAnalyzer.buildAttackerProfile.mutate(p);
-      return makeResult(r, { profile: (r as any).data, srcIp: p.srcIp });
-    } catch (e) {
-      return errResult('构建攻击者画像失败', e);
-    }
-  };
-
-  queryAttackedTargets = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
-    try {
-      const r = await lambdaClient.incidentAnalyzer.queryAttackedTargets.mutate(p);
-      if (!r.success) return r as BuiltinToolResult;
-      const items = (r as any).data?.items ?? [];
-      return makeResult(r, {
-        items,
-        srcIp: p.srcIp,
-        total: (r as any).data?.total ?? items.length,
-      });
-    } catch (e) {
-      return errResult('查询被攻击目标失败', e);
-    }
-  };
-
-  attributeIncident = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
-    try {
-      const r = await lambdaClient.incidentAnalyzer.attributeIncident.mutate(p);
-      return makeResult(r, { attribution: (r as any).data, srcIp: p.srcIp });
-    } catch (e) {
-      return errResult('归因分析失败', e);
     }
   };
 }

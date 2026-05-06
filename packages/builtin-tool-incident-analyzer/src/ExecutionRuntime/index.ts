@@ -1,18 +1,16 @@
 import type { BuiltinServerRuntimeOutput } from '@lobechat/types';
 
 import type {
-  AnalyzeAttackBehaviorArgs,
-  AnalyzeAttackBehaviorState,
-  AttributeIncidentArgs,
-  AttributeIncidentState,
-  BuildAttackerProfileArgs,
-  BuildAttackerProfileState,
-  QueryAttackedTargetsArgs,
-  QueryAttackedTargetsState,
-  QueryAttackerEventsArgs,
-  QueryAttackerEventsState,
+  QueryAssetByIpArgs,
+  QueryAssetByIpState,
+  QueryEventDetailArgs,
+  QueryEventDetailState,
   QueryIndicatorIntelArgs,
   QueryIndicatorIntelState,
+  QueryIpEventsArgs,
+  QueryIpEventsState,
+  QueryIpVulnerabilitiesArgs,
+  QueryIpVulnerabilitiesState,
 } from '../types';
 
 export interface IncidentAnalyzerServiceResult {
@@ -22,14 +20,13 @@ export interface IncidentAnalyzerServiceResult {
 }
 
 export interface IncidentAnalyzerService {
-  analyzeAttackBehavior: (
-    args: AnalyzeAttackBehaviorArgs,
-  ) => Promise<IncidentAnalyzerServiceResult>;
-  attributeIncident: (args: AttributeIncidentArgs) => Promise<IncidentAnalyzerServiceResult>;
-  buildAttackerProfile: (args: BuildAttackerProfileArgs) => Promise<IncidentAnalyzerServiceResult>;
-  queryAttackedTargets: (args: QueryAttackedTargetsArgs) => Promise<IncidentAnalyzerServiceResult>;
-  queryAttackerEvents: (args: QueryAttackerEventsArgs) => Promise<IncidentAnalyzerServiceResult>;
+  queryAssetByIp: (args: QueryAssetByIpArgs) => Promise<IncidentAnalyzerServiceResult>;
+  queryEventDetail: (args: QueryEventDetailArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryIndicatorIntel: (args: QueryIndicatorIntelArgs) => Promise<IncidentAnalyzerServiceResult>;
+  queryIpEvents: (args: QueryIpEventsArgs) => Promise<IncidentAnalyzerServiceResult>;
+  queryIpVulnerabilities: (
+    args: QueryIpVulnerabilitiesArgs,
+  ) => Promise<IncidentAnalyzerServiceResult>;
 }
 
 export class IncidentAnalyzerExecutionRuntime {
@@ -39,40 +36,71 @@ export class IncidentAnalyzerExecutionRuntime {
     this.service = service;
   }
 
-  async queryAttackerEvents(args: QueryAttackerEventsArgs): Promise<BuiltinServerRuntimeOutput> {
+  async queryEventDetail(args: QueryEventDetailArgs): Promise<BuiltinServerRuntimeOutput> {
     try {
-      const result = await this.service.queryAttackerEvents(args);
+      const result = await this.service.queryEventDetail(args);
+      if (!result.success) return { content: result.content, success: false };
+      const state: QueryEventDetailState = {
+        event: result.data ?? null,
+        eventId: args.eventId,
+      };
+      return { content: result.content, state, success: true };
+    } catch (e) {
+      return { content: `查询事件详情失败: ${(e as Error).message}`, error: e, success: false };
+    }
+  }
+
+  async queryIpEvents(args: QueryIpEventsArgs): Promise<BuiltinServerRuntimeOutput> {
+    try {
+      const result = await this.service.queryIpEvents(args);
       if (!result.success) return { content: result.content, success: false };
       const records = result.data?.records ?? [];
-      const state: QueryAttackerEventsState = {
+      const state: QueryIpEventsState = {
         current: result.data?.current,
+        ip: args.srcIp,
+        ipRole: args.ipRole ?? 'src',
         records,
-        srcIp: args.srcIp,
         total: result.data?.total ?? records.length,
       };
       return { content: result.content, state, success: true };
     } catch (e) {
       return {
-        content: `查询攻击者历史事件失败: ${(e as Error).message}`,
+        content: `查询 IP 关联事件失败: ${(e as Error).message}`,
         error: e,
         success: false,
       };
     }
   }
 
-  async analyzeAttackBehavior(
-    args: AnalyzeAttackBehaviorArgs,
-  ): Promise<BuiltinServerRuntimeOutput> {
+  async queryAssetByIp(args: QueryAssetByIpArgs): Promise<BuiltinServerRuntimeOutput> {
     try {
-      const result = await this.service.analyzeAttackBehavior(args);
+      const result = await this.service.queryAssetByIp(args);
       if (!result.success) return { content: result.content, success: false };
-      const state: AnalyzeAttackBehaviorState = {
-        profile: result.data ?? {},
-        srcIp: args.srcIp,
+      const state: QueryAssetByIpState = {
+        assets: result.data ?? [],
+        ip: args.ip,
       };
       return { content: result.content, state, success: true };
     } catch (e) {
-      return { content: `分析攻击行为失败: ${(e as Error).message}`, error: e, success: false };
+      return { content: `查询资产信息失败: ${(e as Error).message}`, error: e, success: false };
+    }
+  }
+
+  async queryIpVulnerabilities(
+    args: QueryIpVulnerabilitiesArgs,
+  ): Promise<BuiltinServerRuntimeOutput> {
+    try {
+      const result = await this.service.queryIpVulnerabilities(args);
+      if (!result.success) return { content: result.content, success: false };
+      const records = result.data?.records ?? [];
+      const state: QueryIpVulnerabilitiesState = {
+        ip: args.ip,
+        records,
+        total: result.data?.total ?? records.length,
+      };
+      return { content: result.content, state, success: true };
+    } catch (e) {
+      return { content: `查询脆弱性失败: ${(e as Error).message}`, error: e, success: false };
     }
   }
 
@@ -90,50 +118,6 @@ export class IncidentAnalyzerExecutionRuntime {
       return { content: result.content, state, success: true };
     } catch (e) {
       return { content: `查询威胁情报失败: ${(e as Error).message}`, error: e, success: false };
-    }
-  }
-
-  async buildAttackerProfile(args: BuildAttackerProfileArgs): Promise<BuiltinServerRuntimeOutput> {
-    try {
-      const result = await this.service.buildAttackerProfile(args);
-      if (!result.success) return { content: result.content, success: false };
-      const state: BuildAttackerProfileState = {
-        profile: result.data ?? {},
-        srcIp: args.srcIp,
-      };
-      return { content: result.content, state, success: true };
-    } catch (e) {
-      return { content: `构建攻击者画像失败: ${(e as Error).message}`, error: e, success: false };
-    }
-  }
-
-  async queryAttackedTargets(args: QueryAttackedTargetsArgs): Promise<BuiltinServerRuntimeOutput> {
-    try {
-      const result = await this.service.queryAttackedTargets(args);
-      if (!result.success) return { content: result.content, success: false };
-      const items = result.data?.items ?? [];
-      const state: QueryAttackedTargetsState = {
-        items,
-        srcIp: args.srcIp,
-        total: result.data?.total ?? items.length,
-      };
-      return { content: result.content, state, success: true };
-    } catch (e) {
-      return { content: `查询被攻击目标失败: ${(e as Error).message}`, error: e, success: false };
-    }
-  }
-
-  async attributeIncident(args: AttributeIncidentArgs): Promise<BuiltinServerRuntimeOutput> {
-    try {
-      const result = await this.service.attributeIncident(args);
-      if (!result.success) return { content: result.content, success: false };
-      const state: AttributeIncidentState = {
-        attribution: result.data ?? {},
-        srcIp: args.srcIp,
-      };
-      return { content: result.content, state, success: true };
-    } catch (e) {
-      return { content: `归因分析失败: ${(e as Error).message}`, error: e, success: false };
     }
   }
 }

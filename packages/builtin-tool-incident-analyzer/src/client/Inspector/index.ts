@@ -1,16 +1,14 @@
 import { IncidentAnalyzerApiName } from '../../types';
-import { AnalyzeAttackBehaviorInspector } from './AnalyzeAttackBehavior';
-import { AttributeIncidentInspector } from './AttributeIncident';
-import { BuildAttackerProfileInspector } from './BuildAttackerProfile';
-import { QueryAttackedTargetsInspector } from './QueryAttackedTargets';
-import { QueryAttackerEventsInspector } from './QueryAttackerEvents';
+import { QueryAssetByIpInspector } from './QueryAssetByIp';
+import { QueryEventDetailInspector } from './QueryEventDetail';
 import { QueryIndicatorIntelInspector } from './QueryIndicatorIntel';
+import { QueryIpEventsInspector } from './QueryIpEvents';
+import { QueryIpVulnerabilitiesInspector } from './QueryIpVulnerabilities';
 
 export const IncidentAnalyzerInspectors = {
-  [IncidentAnalyzerApiName.queryAttackerEvents]: QueryAttackerEventsInspector,
-  [IncidentAnalyzerApiName.analyzeAttackBehavior]: AnalyzeAttackBehaviorInspector,
+  [IncidentAnalyzerApiName.queryEventDetail]: QueryEventDetailInspector,
+  [IncidentAnalyzerApiName.queryIpEvents]: QueryIpEventsInspector,
+  [IncidentAnalyzerApiName.queryAssetByIp]: QueryAssetByIpInspector,
+  [IncidentAnalyzerApiName.queryIpVulnerabilities]: QueryIpVulnerabilitiesInspector,
   [IncidentAnalyzerApiName.queryIndicatorIntel]: QueryIndicatorIntelInspector,
-  [IncidentAnalyzerApiName.buildAttackerProfile]: BuildAttackerProfileInspector,
-  [IncidentAnalyzerApiName.queryAttackedTargets]: QueryAttackedTargetsInspector,
-  [IncidentAnalyzerApiName.attributeIncident]: AttributeIncidentInspector,
 };

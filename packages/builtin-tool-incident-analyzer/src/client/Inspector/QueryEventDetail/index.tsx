@@ -6,21 +6,21 @@ import { memo } from 'react';
 
 import { highlightTextStyles, inspectorTextStyles, shinyTextStyles } from '@/styles';
 
-import type { AnalyzeAttackBehaviorArgs, AnalyzeAttackBehaviorState } from '../../..';
+import type { QueryEventDetailArgs, QueryEventDetailState } from '../../..';
 
-export const AnalyzeAttackBehaviorInspector = memo<
-  BuiltinInspectorProps<AnalyzeAttackBehaviorArgs, AnalyzeAttackBehaviorState>
+export const QueryEventDetailInspector = memo<
+  BuiltinInspectorProps<QueryEventDetailArgs, QueryEventDetailState>
 >(({ args, partialArgs, isArgumentsStreaming, isLoading }) => {
-  const srcIp = args?.srcIp || partialArgs?.srcIp || '';
+  const eventId = args?.eventId || partialArgs?.eventId || '';
 
   if (isArgumentsStreaming) {
     return (
       <div className={cx(inspectorTextStyles.root, shinyTextStyles.shinyText)}>
-        <span>分析攻击行为</span>
-        {srcIp && (
+        <span>查询事件详情</span>
+        {eventId && (
           <>
             <span>: </span>
-            <span className={highlightTextStyles.danger}>{srcIp}</span>
+            <span className={highlightTextStyles.info}>{eventId}</span>
           </>
         )}
       </div>
@@ -29,10 +29,10 @@ export const AnalyzeAttackBehaviorInspector = memo<
 
   return (
     <div className={cx(inspectorTextStyles.root, isLoading && shinyTextStyles.shinyText)}>
-      <span>分析攻击行为: </span>
-      {srcIp && <span className={highlightTextStyles.danger}>{srcIp}</span>}
+      <span>查询事件详情: </span>
+      {eventId && <span className={highlightTextStyles.info}>{eventId}</span>}
     </div>
   );
 });
 
-AnalyzeAttackBehaviorInspector.displayName = 'AnalyzeAttackBehaviorInspector';
+QueryEventDetailInspector.displayName = 'QueryEventDetailInspector';

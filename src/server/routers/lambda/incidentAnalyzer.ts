@@ -10,72 +10,57 @@ const rt = (ctx: AuthContext) =>
     userToken: ctx.rzzxUserToken,
   });
 
-const networkFilter = {
-  endTime: z.string().optional(),
-  networkTypeIn: z.array(z.string()).optional(),
-  startTime: z.string().optional(),
-};
-
-const pageBase = { pageNum: z.number().optional(), pageSize: z.number().optional() };
-
 export const incidentAnalyzerRouter = router({
-  analyzeAttackBehavior: authedProcedure
+  queryAssetByIp: authedProcedure
     .input(
       z.object({
-        ...networkFilter,
-        srcIp: z.string().min(1),
+        ip: z.string().min(1),
+        networkType: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => rt(ctx).analyzeAttackBehavior(input)),
+    .mutation(async ({ ctx, input }) => rt(ctx).queryAssetByIp(input)),
 
-  attributeIncident: authedProcedure
+  queryEventDetail: authedProcedure
+    .input(z.object({ eventId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => rt(ctx).queryEventDetail(input)),
+
+  queryIpVulnerabilities: authedProcedure
     .input(
       z.object({
         endTime: z.string().optional(),
-        indicators: z.array(z.string()).optional(),
-        networkTypeIn: z.array(z.string()).optional(),
-        srcIp: z.string().optional(),
-        startTime: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => rt(ctx).attributeIncident(input)),
-
-  buildAttackerProfile: authedProcedure
-    .input(
-      z.object({
-        ...networkFilter,
-        srcIp: z.string().min(1),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => rt(ctx).buildAttackerProfile(input)),
-
-  queryAttackedTargets: authedProcedure
-    .input(
-      z.object({
-        ...networkFilter,
-        ...pageBase,
-        srcIp: z.string().min(1),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => rt(ctx).queryAttackedTargets(input)),
-
-  queryAttackerEvents: authedProcedure
-    .input(
-      z.object({
-        ...networkFilter,
-        ...pageBase,
+        ip: z.string().min(1),
         levelIn: z.array(z.string()).optional(),
-        srcIp: z.string().min(1),
+        networkTypeIn: z.array(z.string()).optional(),
+        pageNum: z.number().optional(),
+        pageSize: z.number().optional(),
+        startTime: z.string().optional(),
+        subTypeIn: z.array(z.string()).optional(),
+        typeIn: z.array(z.string()).optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => rt(ctx).queryAttackerEvents(input)),
+    .mutation(async ({ ctx, input }) => rt(ctx).queryIpVulnerabilities(input)),
 
   queryIndicatorIntel: authedProcedure
     .input(
       z.object({
         indicator: z.string().min(1),
-        type: z.enum(['ip', 'domain', 'url', 'hash']).optional(),
+        type: z.enum(['domain', 'hash', 'ip', 'url']).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => rt(ctx).queryIndicatorIntel(input)),
+
+  queryIpEvents: authedProcedure
+    .input(
+      z.object({
+        endTime: z.string().optional(),
+        ipRole: z.enum(['dev', 'dst', 'src']).optional(),
+        levelIn: z.array(z.string()).optional(),
+        networkTypeIn: z.array(z.string()).optional(),
+        pageNum: z.number().optional(),
+        pageSize: z.number().optional(),
+        srcIp: z.string().min(1),
+        startTime: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => rt(ctx).queryIpEvents(input)),
 });

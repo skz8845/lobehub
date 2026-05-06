@@ -1,42 +1,38 @@
 export const IncidentAnalyzerIdentifier = 'lobe-incident-analyzer';
 
 export const IncidentAnalyzerApiName = {
-  analyzeAttackBehavior: 'analyzeAttackBehavior',
-  attributeIncident: 'attributeIncident',
-  buildAttackerProfile: 'buildAttackerProfile',
-  queryAttackedTargets: 'queryAttackedTargets',
-  queryAttackerEvents: 'queryAttackerEvents',
+  queryAssetByIp: 'queryAssetByIp',
+  queryEventDetail: 'queryEventDetail',
   queryIndicatorIntel: 'queryIndicatorIntel',
+  queryIpEvents: 'queryIpEvents',
+  queryIpVulnerabilities: 'queryIpVulnerabilities',
 } as const;
 
 export type IncidentAnalyzerApiNameType =
   (typeof IncidentAnalyzerApiName)[keyof typeof IncidentAnalyzerApiName];
 
-// ============ Common Param Types ============
+// ============ API Args ============
 
-export interface TimeRangeArgs {
+export interface QueryEventDetailArgs {
+  eventId: string;
+}
+
+export type IpRole = 'dev' | 'dst' | 'src';
+
+export interface QueryIpEventsArgs {
   endTime?: string;
+  ipRole?: IpRole;
+  levelIn?: string[];
+  networkTypeIn?: string[];
+  pageNum?: number;
+  pageSize?: number;
+  srcIp: string;
   startTime?: string;
 }
 
-export interface NetworkArgs extends TimeRangeArgs {
-  networkTypeIn?: string[];
-}
-
-export interface PageArgs {
-  pageNum?: number;
-  pageSize?: number;
-}
-
-// ============ API Args ============
-
-export interface QueryAttackerEventsArgs extends NetworkArgs, PageArgs {
-  levelIn?: string[];
-  srcIp: string;
-}
-
-export interface AnalyzeAttackBehaviorArgs extends NetworkArgs {
-  srcIp: string;
+export interface QueryAssetByIpArgs {
+  ip: string;
+  networkType?: string;
 }
 
 export interface QueryIndicatorIntelArgs {
@@ -44,23 +40,21 @@ export interface QueryIndicatorIntelArgs {
   type?: 'domain' | 'hash' | 'ip' | 'url';
 }
 
-export interface BuildAttackerProfileArgs extends NetworkArgs {
-  srcIp: string;
-}
-
-export interface QueryAttackedTargetsArgs extends NetworkArgs, PageArgs {
-  srcIp: string;
-}
-
-export interface AttributeIncidentArgs extends TimeRangeArgs {
-  indicators?: string[];
+export interface QueryIpVulnerabilitiesArgs {
+  endTime?: string;
+  ip: string;
+  levelIn?: string[];
   networkTypeIn?: string[];
-  srcIp?: string;
+  pageNum?: number;
+  pageSize?: number;
+  startTime?: string;
+  subTypeIn?: string[];
+  typeIn?: string[];
 }
 
 // ============ Response Types ============
 
-export interface AttackEvent {
+export interface SecurityEventDetail {
   devIp?: string;
   devName?: string;
   dstIp?: string;
@@ -77,67 +71,37 @@ export interface AttackEvent {
   time?: string;
   times?: number;
   type?: number;
+  uuid?: string;
 }
 
-export interface AttackTargetItem {
-  dstIp: string;
-  dstIpDirection?: string;
-  eventCount: number;
-}
-
-export interface TTPItem {
-  attackType: string;
-  count: number;
-  level: string;
-  subTypes: string[];
-  tacticId?: string;
-  tacticName?: string;
-}
-
-export interface AttackBehaviorProfile {
-  attackedTargets: number;
-  firstSeen?: string;
-  lastSeen?: string;
-  levelDistribution: Record<string, number>;
-  networkDistribution: Record<string, number>;
-  primaryTactics: string[];
-  srcIp: string;
-  topAttackTypes: TTPItem[];
-  totalEvents: number;
-}
-
-export interface AttackerProfile {
-  attackedTargets: AttackTargetItem[];
-  behaviorSummary: AttackBehaviorProfile;
-  intelRecords: number;
-  srcIp: string;
-  threatScore: number;
-}
-
-export interface AttributionResult {
-  aptGroups: Array<{
-    confidence: 'high' | 'low' | 'medium';
-    groupId: string;
-    groupName: string;
-    matchedTechniques: string[];
-  }>;
-  confidence: 'high' | 'low' | 'medium';
-  evidence: string[];
-  summary: string;
+export interface AssetDetail {
+  assetDeviceModel?: string;
+  host?: string;
+  ip?: string;
+  networkType?: string;
+  openPorts?: string;
+  os?: string;
+  status?: string;
 }
 
 // ============ UI State ============
 
-export interface QueryAttackerEventsState {
+export interface QueryEventDetailState {
+  event: SecurityEventDetail | null;
+  eventId: string;
+}
+
+export interface QueryIpEventsState {
   current?: number;
-  records: AttackEvent[];
-  srcIp: string;
+  ip: string;
+  ipRole: IpRole;
+  records: SecurityEventDetail[];
   total: number;
 }
 
-export interface AnalyzeAttackBehaviorState {
-  profile: AttackBehaviorProfile;
-  srcIp: string;
+export interface QueryAssetByIpState {
+  assets: AssetDetail[];
+  ip: string;
 }
 
 export interface QueryIndicatorIntelState {
@@ -147,19 +111,23 @@ export interface QueryIndicatorIntelState {
   type: string;
 }
 
-export interface BuildAttackerProfileState {
-  profile: AttackerProfile;
-  srcIp: string;
+export interface VulnerabilityItem {
+  cnnvd?: string;
+  cnvd?: string;
+  cve?: string;
+  id?: number;
+  ip?: string;
+  level?: number;
+  message?: string;
+  name?: string;
+  networkType?: string;
+  status?: number;
+  time?: string;
+  type?: string;
 }
 
-export interface QueryAttackedTargetsState {
-  current?: number;
-  items: AttackTargetItem[];
-  srcIp: string;
+export interface QueryIpVulnerabilitiesState {
+  ip: string;
+  records: VulnerabilityItem[];
   total: number;
-}
-
-export interface AttributeIncidentState {
-  attribution: AttributionResult;
-  srcIp?: string;
 }

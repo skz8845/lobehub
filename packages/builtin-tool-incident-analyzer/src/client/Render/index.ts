@@ -1,15 +1,13 @@
-import AnalyzeAttackBehaviorRender from './AnalyzeAttackBehavior';
-import AttributeIncidentRender from './AttributeIncident';
-import BuildAttackerProfileRender from './BuildAttackerProfile';
-import QueryAttackedTargetsRender from './QueryAttackedTargets';
-import QueryAttackerEventsRender from './QueryAttackerEvents';
+import QueryAssetByIpRender from './QueryAssetByIp';
+import QueryEventDetailRender from './QueryEventDetail';
 import QueryIndicatorIntelRender from './QueryIndicatorIntel';
+import QueryIpEventsRender from './QueryIpEvents';
+import QueryIpVulnerabilitiesRender from './QueryIpVulnerabilities';
 
 export const IncidentAnalyzerRenders = {
-  analyzeAttackBehavior: AnalyzeAttackBehaviorRender,
-  attributeIncident: AttributeIncidentRender,
-  buildAttackerProfile: BuildAttackerProfileRender,
-  queryAttackedTargets: QueryAttackedTargetsRender,
-  queryAttackerEvents: QueryAttackerEventsRender,
+  queryAssetByIp: QueryAssetByIpRender,
+  queryEventDetail: QueryEventDetailRender,
   queryIndicatorIntel: QueryIndicatorIntelRender,
+  queryIpEvents: QueryIpEventsRender,
+  queryIpVulnerabilities: QueryIpVulnerabilitiesRender,
 };
