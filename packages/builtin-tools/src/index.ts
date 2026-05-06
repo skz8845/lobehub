@@ -10,6 +10,7 @@ import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
 // import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
 // import { GroupManagementManifest } from '@lobechat/builtin-tool-group-management';
 import { GTDManifest } from '@lobechat/builtin-tool-gtd';
+import { IncidentAnalyzerManifest } from '@lobechat/builtin-tool-incident-analyzer';
 import { KnowledgeBaseManifest } from '@lobechat/builtin-tool-knowledge-base';
 import { LocalSystemManifest } from '@lobechat/builtin-tool-local-system';
 import { MemoryManifest } from '@lobechat/builtin-tool-memory';
@@ -160,6 +161,12 @@ export const builtinTools: LobeBuiltinTool[] = [
     hidden: true,
     identifier: CveAnalyzerManifest.identifier,
     manifest: CveAnalyzerManifest,
+    type: 'builtin',
+  },
+  {
+    hidden: true,
+    identifier: IncidentAnalyzerManifest.identifier,
+    manifest: IncidentAnalyzerManifest,
     type: 'builtin',
   },
   {

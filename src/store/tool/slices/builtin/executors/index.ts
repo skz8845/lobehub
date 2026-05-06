@@ -12,6 +12,7 @@ import { credsExecutor } from '@lobechat/builtin-tool-creds/executor';
 import { cronExecutor } from '@lobechat/builtin-tool-cron/executor';
 import { cveAnalyzerExecutor } from '@lobechat/builtin-tool-cve-analyzer/executor';
 import { gtdExecutor } from '@lobechat/builtin-tool-gtd/executor';
+import { incidentAnalyzerExecutor } from '@lobechat/builtin-tool-incident-analyzer/executor';
 import { knowledgeBaseExecutor } from '@lobechat/builtin-tool-knowledge-base/executor';
 import { localSystemExecutor } from '@lobechat/builtin-tool-local-system/executor';
 import { memoryExecutor } from '@lobechat/builtin-tool-memory/executor';
@@ -136,6 +137,7 @@ registerExecutors([
   calculatorExecutor,
   cloudSandboxExecutor,
   cveAnalyzerExecutor,
+  incidentAnalyzerExecutor,
   saAnalyzerExecutor,
   threatIntelExecutor,
   credsExecutor,

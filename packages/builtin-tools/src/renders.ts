@@ -16,6 +16,8 @@ import { CveAnalyzerRenders } from '@lobechat/builtin-tool-cve-analyzer/client';
 // import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
 // import { GroupAgentBuilderRenders } from '@lobechat/builtin-tool-group-agent-builder/client';
 import { GTDManifest, GTDRenders } from '@lobechat/builtin-tool-gtd/client';
+import { IncidentAnalyzerManifest } from '@lobechat/builtin-tool-incident-analyzer';
+import { IncidentAnalyzerRenders } from '@lobechat/builtin-tool-incident-analyzer/client';
 import {
   KnowledgeBaseManifest,
   KnowledgeBaseRenders,
@@ -50,6 +52,7 @@ const BuiltinToolsRenders: Record<string, Record<string, BuiltinRender>> = {
   [ClaudeCodeIdentifier]: ClaudeCodeRenders as Record<string, BuiltinRender>,
   [CloudSandboxManifest.identifier]: CloudSandboxRenders as Record<string, BuiltinRender>,
   [CveAnalyzerManifest.identifier]: CveAnalyzerRenders as Record<string, BuiltinRender>,
+  [IncidentAnalyzerManifest.identifier]: IncidentAnalyzerRenders as Record<string, BuiltinRender>,
   [SaAnalyzerManifest.identifier]: SaAnalyzerRenders as Record<string, BuiltinRender>,
   [ThreatIntelManifest.identifier]: ThreatIntelRenders as Record<string, BuiltinRender>,
   // [GroupAgentBuilderManifest.identifier]: GroupAgentBuilderRenders as Record<string, BuiltinRender>,

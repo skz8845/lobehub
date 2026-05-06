@@ -32,6 +32,10 @@ import {
 // } from '@lobechat/builtin-tool-group-management/client';
 import { GTDInspectors, GTDManifest } from '@lobechat/builtin-tool-gtd/client';
 import {
+  IncidentAnalyzerInspectors,
+  IncidentAnalyzerManifest,
+} from '@lobechat/builtin-tool-incident-analyzer/client';
+import {
   KnowledgeBaseInspectors,
   KnowledgeBaseManifest,
 } from '@lobechat/builtin-tool-knowledge-base/client';
@@ -84,6 +88,10 @@ const BuiltinToolInspectors: Record<string, Record<string, BuiltinInspector>> = 
   //   BuiltinInspector
   // >,
   [CveAnalyzerManifest.identifier]: CveAnalyzerInspectors as Record<string, BuiltinInspector>,
+  [IncidentAnalyzerManifest.identifier]: IncidentAnalyzerInspectors as Record<
+    string,
+    BuiltinInspector
+  >,
   [SaAnalyzerManifest.identifier]: SaAnalyzerInspectors as Record<string, BuiltinInspector>,
   [ThreatIntelManifest.identifier]: ThreatIntelInspectors as Record<string, BuiltinInspector>,
   [GTDManifest.identifier]: GTDInspectors as Record<string, BuiltinInspector>,

@@ -38,6 +38,7 @@ import { generationTopicRouter } from './generationTopic';
 import { homeRouter } from './home';
 import { imageRouter } from './image';
 import { importerRouter } from './importer';
+import { incidentAnalyzerRouter } from './incidentAnalyzer';
 import { klavisRouter } from './klavis';
 import { knowledgeRouter } from './knowledge';
 import { knowledgeBaseRouter } from './knowledgeBase';
@@ -113,6 +114,7 @@ export const lambdaRouter = router({
   session: sessionRouter,
   sessionGroup: sessionGroupRouter,
   share: shareRouter,
+  incidentAnalyzer: incidentAnalyzerRouter,
   saAnalyzer: saAnalyzerRouter,
   threatIntel: threatIntelRouter,
   thread: threadRouter,

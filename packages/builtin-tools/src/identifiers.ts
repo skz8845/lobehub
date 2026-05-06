@@ -9,6 +9,7 @@ import { CveAnalyzerManifest } from '@lobechat/builtin-tool-cve-analyzer';
 // import { GroupAgentBuilderManifest } from '@lobechat/builtin-tool-group-agent-builder';
 // import { GroupManagementManifest, GroupManagementManifest } from '@lobechat/builtin-tool-group-management';
 import { GTDManifest } from '@lobechat/builtin-tool-gtd';
+import { IncidentAnalyzerManifest } from '@lobechat/builtin-tool-incident-analyzer';
 import { KnowledgeBaseManifest } from '@lobechat/builtin-tool-knowledge-base';
 import { LocalSystemManifest } from '@lobechat/builtin-tool-local-system';
 import { MemoryManifest } from '@lobechat/builtin-tool-memory';
@@ -31,6 +32,7 @@ export const builtinToolIdentifiers: string[] = [
   CloudSandboxManifest.identifier,
   CredsManifest.identifier,
   CveAnalyzerManifest.identifier,
+  IncidentAnalyzerManifest.identifier,
   SaAnalyzerManifest.identifier,
   ThreatIntelManifest.identifier,
   // GroupAgentBuilderManifest.identifier,
