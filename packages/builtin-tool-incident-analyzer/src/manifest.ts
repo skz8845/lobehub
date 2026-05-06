@@ -68,35 +68,35 @@ export const IncidentAnalyzerManifest: BuiltinToolManifest = {
         type: 'object',
       },
     },
-    {
-      description: `查询IP/域名/URL/文件哈希的威胁情报，从MISP平台获取已知IOC记录、关联攻击事件、威胁标签等信息。
+    //     {
+    //       description: `查询IP/域名/URL/文件哈希的威胁情报，从MISP平台获取已知IOC记录、关联攻击事件、威胁标签等信息。
 
-### indicator 支持格式
-- IPv4地址（如 192.168.1.1）
-- 域名（如 evil.com）
-- URL（如 http://evil.com/payload）
-- 文件哈希：MD5(32位) / SHA1(40位) / SHA256(64位)
+    // ### indicator 支持格式
+    // - IPv4地址（如 192.168.1.1）
+    // - 域名（如 evil.com）
+    // - URL（如 http://evil.com/payload）
+    // - 文件哈希：MD5(32位) / SHA1(40位) / SHA256(64位)
 
-### type 指标类型（可选，自动识别）
-ip | domain | url | hash`,
-      name: IncidentAnalyzerApiName.queryIndicatorIntel,
-      parameters: {
-        additionalProperties: false,
-        properties: {
-          indicator: {
-            description: '要查询的指标值：IP地址、域名、URL 或文件哈希（MD5/SHA1/SHA256）',
-            type: 'string',
-          },
-          type: {
-            description: '指标类型（可选，自动识别）：ip, domain, url, hash',
-            enum: ['ip', 'domain', 'url', 'hash'],
-            type: 'string',
-          },
-        },
-        required: ['indicator'],
-        type: 'object',
-      },
-    },
+    // ### type 指标类型（可选，自动识别）
+    // ip | domain | url | hash`,
+    //       name: IncidentAnalyzerApiName.queryIndicatorIntel,
+    //       parameters: {
+    //         additionalProperties: false,
+    //         properties: {
+    //           indicator: {
+    //             description: '要查询的指标值：IP地址、域名、URL 或文件哈希（MD5/SHA1/SHA256）',
+    //             type: 'string',
+    //           },
+    //           type: {
+    //             description: '指标类型（可选，自动识别）：ip, domain, url, hash',
+    //             enum: ['ip', 'domain', 'url', 'hash'],
+    //             type: 'string',
+    //           },
+    //         },
+    //         required: ['indicator'],
+    //         type: 'object',
+    //       },
+    //     },
     {
       description: `综合构建攻击者画像，聚合以下多维度信息：
 1. **攻击历史统计**：总事件数、最早/最近攻击时间
@@ -186,7 +186,7 @@ ip | domain | url | hash`,
   meta: {
     avatar: '🔬',
     description: '攻击溯源、威胁情报关联、攻击者画像与精准归因',
-    title: '安全事件研判助手',
+    title: '安全事件研判',
   },
   systemRole: systemPrompt,
   type: 'builtin',

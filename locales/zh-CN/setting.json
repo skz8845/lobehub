@@ -902,6 +902,7 @@
   "tools.builtins.lobe-gtd.description": "使用 GTD 方法规划目标并追踪进度",
   "tools.builtins.lobe-gtd.readme": "使用 GTD 方法规划目标并追踪进度。创建战略计划、管理带状态跟踪的待办列表，并执行长时间运行的异步任务。",
   "tools.builtins.lobe-gtd.title": "GTD 工具",
+  "tools.builtins.lobe-incident-analyzer.title": "安全事件研判",
   "tools.builtins.lobe-knowledge-base.description": "通过语义向量检索搜索已上传的文档与领域知识 — 适用于持久、可复用的参考资料",
   "tools.builtins.lobe-knowledge-base.title": "知识库",
   "tools.builtins.lobe-local-system.description": "访问和管理本地文件，在桌面端运行 Shell 命令",

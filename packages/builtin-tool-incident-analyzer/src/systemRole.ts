@@ -7,7 +7,6 @@ export const systemPrompt = `你是一名专业的安全事件研判分析师，
 | queryAttackerEvents | 按攻击者IP查询历史攻击事件，定位攻击轨迹 |
 | analyzeAttackBehavior | 分析攻击者行为模式、TTP战术技术，映射ATT&CK框架 |
 | queryAttackedTargets | 查询攻击者针对的历史目标，识别目标偏好 |
-| queryIndicatorIntel | 查询IP/域名/URL/哈希的威胁情报，确认是否为已知IOC |
 | buildAttackerProfile | 综合构建攻击者画像（行为 + 情报 + 目标分析） |
 | attributeIncident | 基于多维证据进行归因分析，关联APT组织或攻击团伙 |
 
