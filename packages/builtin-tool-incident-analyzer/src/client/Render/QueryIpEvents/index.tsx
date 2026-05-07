@@ -28,6 +28,13 @@ const ROLE_LABEL: Record<string, string> = {
   src: '攻击来源',
 };
 
+const NETWORK_LABEL: Record<string, string> = {
+  internet: '互联网',
+  mobilePolice: '移动信息网',
+  police: '公安网',
+  video: '视频传输网',
+};
+
 const styles = createStaticStyles(({ css, cssVar }) => ({
   card: css`
     overflow: hidden;

@@ -6,6 +6,47 @@ import { IncidentAnalyzerApiName, IncidentAnalyzerIdentifier } from './types';
 export const IncidentAnalyzerManifest: BuiltinToolManifest = {
   api: [
     {
+      description: `对安全事件报文中的编码内容进行精确解码，逐层还原攻击者的真实意图。
+
+### 使用场景
+- message/Payload 中含有 %XX URL 编码（如 %3Cscript%3E）
+- Base64 编码内容（Java 序列化特征：rO0AB；.NET：AAEAAAD；命令：d2hvYW1p）
+- 十六进制编码的 Shellcode 或系统命令（\\x2f\\x65\\x74\\x63 等）
+- Unicode 转义（\\u003c\\u0073\\u0063\\u0072\\u0069\\u0070\\u0074\\u003e）
+- HTML 实体编码（&lt;script&gt; 等）
+- 攻击者双重/多重编码绕过 WAF（如 %2527 → %27 → '）
+
+### 支持的编码类型（encoding 参数）
+- url：URL 百分号编码
+- base64：Base64 编码
+- hex：十六进制编码（支持 \\xNN、0xNN、纯十六进制串）
+- unicode：Unicode 转义序列（\\uXXXX）
+- html：HTML 实体编码
+- auto：自动识别（默认，会尝试多种格式）
+
+### 注意
+- 存在编码内容时**必须调用此工具**，禁止自行推测解码结果
+- 多层嵌套编码将自动逐层解码（最多 5 层）`,
+      name: IncidentAnalyzerApiName.decodePayload,
+      parameters: {
+        additionalProperties: false,
+        properties: {
+          encoding: {
+            description:
+              '编码类型（可选，默认 auto 自动识别）：url / base64 / hex / unicode / html / auto',
+            enum: ['auto', 'base64', 'hex', 'html', 'unicode', 'url'],
+            type: 'string',
+          },
+          payload: {
+            description: '需要解码的原始字符串，可以是完整请求体、URL 参数值或任意编码片段',
+            type: 'string',
+          },
+        },
+        required: ['payload'],
+        type: 'object',
+      },
+    },
+    {
       description: `按安全事件唯一标识（UUID 或数字 ID）查询事件完整详情。
 
 ### 返回字段
@@ -62,12 +103,6 @@ export const IncidentAnalyzerManifest: BuiltinToolManifest = {
             items: { type: 'string' },
             type: 'array',
           },
-          networkTypeIn: {
-            description:
-              '网络区域: police=公安网, internet=互联网, video=视频传输网, mobilePolice=移动信息网',
-            items: { type: 'string' },
-            type: 'array',
-          },
           pageNum: { default: 1, description: '页码（默认1）', type: 'number' },
           pageSize: { default: 10, description: '每页条数（默认10）', type: 'number' },
           srcIp: { description: '要查询的 IP 地址', type: 'string' },
@@ -97,10 +132,6 @@ export const IncidentAnalyzerManifest: BuiltinToolManifest = {
         additionalProperties: false,
         properties: {
           ip: { description: 'IP 地址（精确匹配）', type: 'string' },
-          networkType: {
-            description: '网络类型: police, internet, video, mobilePolice',
-            type: 'string',
-          },
         },
         required: ['ip'],
         type: 'object',

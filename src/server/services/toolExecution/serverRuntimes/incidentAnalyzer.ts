@@ -93,8 +93,15 @@ async function mispPost(path: string, body: Record<string, any>): Promise<any> {
 
 const LEVEL: Record<number, string> = { 1: '提示', 2: '低危', 3: '中危', 4: '高危', 5: '超危' };
 const STATUS: Record<number, string> = { 1: '未消除', 2: '已处置', 3: '不处置' };
+const NETWORK_LABEL: Record<string, string> = {
+  internet: '互联网',
+  mobilePolice: '移动信息网',
+  police: '公安网',
+  video: '视频传输网',
+};
 const lv = (l?: number) => (l != null ? (LEVEL[l] ?? `L${l}`) : '未知');
 const st = (s?: number) => (s != null ? (STATUS[s] ?? '') : '');
+const nl = (n?: string) => (n != null ? (NETWORK_LABEL[n] ?? '') : '未知');
 
 const IP_RE = /^(?:\d{1,3}\.){3}\d{1,3}$|^[\d:A-F][\dA-F]*:[\d:A-F]+$/i;
 const HASH_RE = /^[0-9a-f]{32}$|^[0-9a-f]{40}$|^[0-9a-f]{64}$/i;
@@ -111,7 +118,7 @@ function detectType(value: string): string {
 function formatEvent(r: any): string {
   return [
     `### ${r.eventName ?? '未知'} [${lv(r.level)}]`,
-    `**时间**: ${r.time ?? '未知'} | **网络**: ${r.networkType ?? '未知'} | **状态**: ${st(r.status)}`,
+    `**时间**: ${r.time ?? '未知'} | **网络**: ${nl(r.networkType)} | **状态**: ${st(r.status)}`,
     r.srcIp ? `**来源**: ${r.srcIp}${r.srcPort ? `:${r.srcPort}` : ''}` : '',
     r.dstIp ? `**目标**: ${r.dstIp}${r.dstPort ? `:${r.dstPort}` : ''}` : '',
     r.devName ? `**设备**: ${r.devName}` : '',
@@ -119,6 +126,81 @@ function formatEvent(r: any): string {
   ]
     .filter(Boolean)
     .join('\n');
+}
+
+// ─── Payload decoder (pure, no external I/O) ─────────────────────────────────
+
+type DecodeEncoding = 'base64' | 'hex' | 'html' | 'unicode' | 'url';
+
+function detectEncoding(s: string): DecodeEncoding | null {
+  if (/%[0-9A-F]{2}/i.test(s)) return 'url';
+  if (/\\u[0-9A-Fa-f]{4}/.test(s)) return 'unicode';
+  if (/&(?:#\d+|#x[0-9A-F]+|lt|gt|amp|quot|apos);/i.test(s)) return 'html';
+  const hex = s.replaceAll(/\\x|0x/gi, '').replaceAll(/\s/g, '');
+  if (hex.length >= 4 && /^[0-9A-F]+$/i.test(hex) && hex.length % 2 === 0) return 'hex';
+  const b64 = s.trim();
+  if (b64.length >= 8 && /^[A-Z0-9+/]+=*$/i.test(b64) && b64.length % 4 === 0) return 'base64';
+  return null;
+}
+
+function tryDecode(s: string, enc: DecodeEncoding): string | null {
+  try {
+    switch (enc) {
+      case 'url': {
+        return decodeURIComponent(s.replaceAll('+', ' '));
+      }
+      case 'base64': {
+        return Buffer.from(s.trim(), 'base64').toString('utf8');
+      }
+      case 'hex': {
+        const clean = s.replaceAll(/\\x|0x/gi, '').replaceAll(/\s/g, '');
+        return Buffer.from(clean, 'hex').toString('utf8');
+      }
+      case 'unicode': {
+        return s.replaceAll(/\\u([0-9A-Fa-f]{4})/g, (_, h) =>
+          String.fromCharCode(Number.parseInt(h, 16)),
+        );
+      }
+      case 'html': {
+        return s
+          .replaceAll(/&amp;/gi, '&')
+          .replaceAll(/&lt;/gi, '<')
+          .replaceAll(/&gt;/gi, '>')
+          .replaceAll(/&quot;/gi, '"')
+          .replaceAll(/&apos;/gi, "'")
+          .replaceAll(/&#(\d+);/g, (_, n) => String.fromCharCode(Number.parseInt(n, 10)))
+          .replaceAll(/&#x([0-9A-F]+);/gi, (_, h) => String.fromCharCode(Number.parseInt(h, 16)));
+      }
+    }
+  } catch {
+    return null;
+  }
+}
+
+function decodePayloadPure(
+  payload: string,
+  forcedEncoding?: string,
+): {
+  decoded: string;
+  layers: Array<{ encoding: string; input: string; layer: number; output: string }>;
+  original: string;
+} {
+  const layers: Array<{ encoding: string; input: string; layer: number; output: string }> = [];
+  let current = payload;
+
+  for (let i = 1; i <= 5; i++) {
+    const enc: DecodeEncoding | null =
+      i === 1 && forcedEncoding && forcedEncoding !== 'auto'
+        ? (forcedEncoding as DecodeEncoding)
+        : detectEncoding(current);
+    if (!enc) break;
+    const result = tryDecode(current, enc);
+    if (!result || result === current) break;
+    layers.push({ encoding: enc, input: current, layer: i, output: result });
+    current = result;
+  }
+
+  return { decoded: current, layers, original: payload };
 }
 
 // ─── Runtime factory ──────────────────────────────────────────────────────────
@@ -129,20 +211,12 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
       const { eventId } = args;
       log('queryEventDetail %s', eventId);
 
-      // Try detail endpoint first, fall back to page query by id
-      let data: any = null;
-      try {
-        data = await saPost(ctx, '/event/detail', { id: eventId, uuid: eventId });
-      } catch {
-        // Fall back: search page with id filter
-        const pageData = await saPost(ctx, '/event/page', {
-          id: eventId,
-          networkTypeIn: ['police', 'internet', 'video', 'mobilePolice'],
-          pageNum: 1,
-          pageSize: 1,
-        });
-        data = pageData?.records?.[0] ?? null;
-      }
+      const pageData = await saPost(ctx, '/event/page', {
+        uuid: eventId,
+        pageNum: 1,
+        pageSize: 1,
+      });
+      const data: any = pageData?.records?.[0] ?? null;
 
       if (!data) {
         return {
@@ -158,7 +232,7 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
         `**事件名称**: ${data.eventName ?? '未知'}`,
         `**事件 ID**: ${data.id ?? eventId}`,
         `**时间**: ${data.time ?? '未知'}`,
-        `**网络**: ${data.networkType ?? '未知'}`,
+        `**网络**: ${nl(data.networkType)}`,
         `**状态**: ${st(data.status)}`,
         '',
         data.srcIp ? `**攻击来源**: ${data.srcIp}${data.srcPort ? `:${data.srcPort}` : ''}` : '',
@@ -179,7 +253,6 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
   queryIpEvents: async (args: any) => {
     try {
       const { srcIp: ip, ipRole = 'src' } = args;
-      const nets = args.networkTypeIn ?? ['police', 'internet', 'video', 'mobilePolice'];
 
       // Map ipRole to the correct SA API parameter
       const ipParam: Record<string, any> = {};
@@ -190,7 +263,6 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
       const data = await saPost(ctx, '/event/page', {
         endTime: args.endTime ?? '',
         levelIn: args.levelIn ?? [],
-        networkTypeIn: nets,
         pageNum: args.pageNum ?? 1,
         pageSize: args.pageSize ?? 10,
         startTime: args.startTime ?? '',
@@ -223,12 +295,11 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
 
   queryAssetByIp: async (args: any) => {
     try {
-      const { ip, networkType } = args;
+      const { ip } = args;
       log('queryAssetByIp %s', ip);
 
       const data = await saPost(ctx, '/asset/page', {
         ip,
-        networkType: networkType ?? '',
         pageNum: 1,
         pageSize: 5,
       });
@@ -252,7 +323,7 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
             r.host ? `**主机名**: ${r.host}` : '',
             r.os ? `**操作系统**: ${r.os}` : '',
             r.assetDeviceModel ? `**设备型号**: ${r.assetDeviceModel}` : '',
-            r.networkType ? `**所属网络**: ${r.networkType}` : '',
+            r.networkType ? `**所属网络**: ${nl(r.networkType)}` : '',
             r.openPorts ? `**开放端口**: ${r.openPorts}` : '',
             r.status ? `**在线状态**: ${r.status}` : '',
           ]
@@ -273,7 +344,6 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
         endTime: args.endTime ?? '',
         ip: args.ip,
         levelIn: args.levelIn ?? [],
-        networkTypeIn: args.networkTypeIn ?? ['video', 'police', 'internet'],
         pageNum: args.pageNum ?? 1,
         pageSize: args.pageSize ?? 10,
         startTime: args.startTime ?? '',
@@ -313,7 +383,39 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
       return { content: `查询脆弱性失败: ${(e as Error).message}`, success: false };
     }
   },
+  decodePayload: async (args: any) => {
+    try {
+      const { payload, encoding } = args;
+      const result = decodePayloadPure(payload, encoding);
 
+      if (!result.layers.length) {
+        return {
+          content: `未检测到已知编码格式，内容可能已是明文：\n\`\`\`\n${payload}\n\`\`\``,
+          data: result,
+          success: true,
+        };
+      }
+
+      const layerBlocks = result.layers.map(
+        (l) =>
+          `### 第 ${l.layer} 层 — ${l.encoding.toUpperCase()} 解码\n**输入**: \`${l.input.slice(0, 300)}${l.input.length > 300 ? '...' : ''}\`\n**输出**:\n\`\`\`\n${l.output}\n\`\`\``,
+      );
+
+      const lines = [
+        `## 编码解析结果（共 ${result.layers.length} 层）`,
+        ``,
+        `**原始输入**: \`${payload.slice(0, 200)}${payload.length > 200 ? '...' : ''}\``,
+        ``,
+        layerBlocks.join('\n\n'),
+        ``,
+        `**最终明文**:\n\`\`\`\n${result.decoded}\n\`\`\``,
+      ];
+
+      return { content: lines.join('\n'), data: result, success: true };
+    } catch (e) {
+      return { content: `解码失败: ${(e as Error).message}`, success: false };
+    }
+  },
   queryIndicatorIntel: async (args: any) => {
     try {
       const { indicator } = args;

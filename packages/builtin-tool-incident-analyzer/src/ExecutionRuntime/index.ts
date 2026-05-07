@@ -1,6 +1,8 @@
 import type { BuiltinServerRuntimeOutput } from '@lobechat/types';
 
 import type {
+  DecodePayloadArgs,
+  DecodePayloadState,
   QueryAssetByIpArgs,
   QueryAssetByIpState,
   QueryEventDetailArgs,
@@ -20,6 +22,7 @@ export interface IncidentAnalyzerServiceResult {
 }
 
 export interface IncidentAnalyzerService {
+  decodePayload?: (args: DecodePayloadArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryAssetByIp: (args: QueryAssetByIpArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryEventDetail: (args: QueryEventDetailArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryIndicatorIntel: (args: QueryIndicatorIntelArgs) => Promise<IncidentAnalyzerServiceResult>;
@@ -34,6 +37,24 @@ export class IncidentAnalyzerExecutionRuntime {
 
   constructor(service: IncidentAnalyzerService) {
     this.service = service;
+  }
+
+  async decodePayload(args: DecodePayloadArgs): Promise<BuiltinServerRuntimeOutput> {
+    if (this.service.decodePayload) {
+      try {
+        const result = await this.service.decodePayload(args);
+        if (!result.success) return { content: result.content, success: false };
+        const state: DecodePayloadState = result.data ?? {
+          decoded: args.payload,
+          layers: [],
+          original: args.payload,
+        };
+        return { content: result.content, state, success: true };
+      } catch (e) {
+        return { content: `解码失败: ${(e as Error).message}`, error: e, success: false };
+      }
+    }
+    return { content: '解码服务不可用', success: false };
   }
 
   async queryEventDetail(args: QueryEventDetailArgs): Promise<BuiltinServerRuntimeOutput> {

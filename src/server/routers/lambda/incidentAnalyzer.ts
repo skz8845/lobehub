@@ -11,6 +11,14 @@ const rt = (ctx: AuthContext) =>
   });
 
 export const incidentAnalyzerRouter = router({
+  decodePayload: authedProcedure
+    .input(
+      z.object({
+        encoding: z.enum(['auto', 'base64', 'hex', 'html', 'unicode', 'url']).optional(),
+        payload: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => rt(ctx).decodePayload(input)),
   queryAssetByIp: authedProcedure
     .input(
       z.object({

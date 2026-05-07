@@ -90,6 +90,13 @@ const LEVEL: Record<number, string> = { 1: '提示', 2: '低危', 3: '中危', 4
 const STATUS: Record<number, string> = { 1: '未消除', 2: '已处置', 3: '不处置' };
 const lv = (l?: number) => (l != null ? (LEVEL[l] ?? `L${l}`) : '未知');
 const st = (s?: number) => (s != null ? (STATUS[s] ?? '') : '');
+const NETWORK_LABEL: Record<string, string> = {
+  internet: '互联网',
+  mobilePolice: '移动信息网',
+  police: '公安网',
+  video: '视频传输网',
+};
+const nl = (n?: string) => (n != null ? (NETWORK_LABEL[n] ?? '') : '未知');
 
 // ─── Runtime factory ──────────────────────────────────────────────────────────
 
@@ -296,7 +303,7 @@ const createSaRuntime = (ctx?: SaRuntimeContext) => ({
       });
       const rows = (data ?? []).map(
         (it: any) =>
-          `**${it.networkType ?? '未知'}**: 事件${it.eventCount ?? 0}次，来源IP ${it.fromIpCount ?? 0}，目标IP ${it.toIpCount ?? 0}，内→外${it.outDirection ?? 0}，外→内${it.inDirection ?? 0}`,
+          `**${nl(it.networkType) ?? '未知'}**: 事件${it.eventCount ?? 0}次，来源IP ${it.fromIpCount ?? 0}，目标IP ${it.toIpCount ?? 0}，内→外${it.outDirection ?? 0}，外→内${it.inDirection ?? 0}`,
       );
       return {
         content: `## 网络攻击信息视图\n\n${rows.join('\n') || '暂无'}`,
@@ -326,7 +333,7 @@ const createSaRuntime = (ctx?: SaRuntimeContext) => ({
         const rows = (data ?? [])
           .map(
             (it: any) =>
-              `| ${it.typeName ?? '未知'} | ${it.eventCount ?? 0} | ${it.networkType ?? ''} |`,
+              `| ${it.typeName ?? '未知'} | ${it.eventCount ?? 0} | ${nl(it.networkType) ?? '未知'} |`,
           )
           .join('\n');
         return {
@@ -424,7 +431,7 @@ const createSaRuntime = (ctx?: SaRuntimeContext) => ({
       });
       const rows = (data ?? []).map(
         (it: any) =>
-          `**${it.networkType ?? '未知'}**: 事件${it.eventCount ?? 0}，设备${it.devCount ?? 0}，已处置${it.disposedCount ?? 0}，今日事件${it.todayEventCount ?? 0}`,
+          `**${nl(it.networkType) ?? '未知'}**: 事件${it.eventCount ?? 0}，设备${it.devCount ?? 0}，已处置${it.disposedCount ?? 0}，今日事件${it.todayEventCount ?? 0}`,
       );
       return { content: `## 安全事件概览\n\n${rows.join('\n') || '暂无'}`, data, success: true };
     } catch (e) {
@@ -480,7 +487,7 @@ const createSaRuntime = (ctx?: SaRuntimeContext) => ({
       const data: any[] = await saPost(ctx, path, body);
       const rows = (data ?? []).map(
         (it: any) =>
-          `**${it.networkType ?? '未知'}**: 提示${it.oneCount ?? 0} 低${it.twoCount ?? 0} 中${it.threeCount ?? 0} 高${it.fourCount ?? 0} 超${it.fiveCount ?? 0}`,
+          `**${nl(it.networkType) ?? '未知'}**: 提示${it.oneCount ?? 0} 低${it.twoCount ?? 0} 中${it.threeCount ?? 0} 高${it.fourCount ?? 0} 超${it.fiveCount ?? 0}`,
       );
       return { content: `## 风险级别统计\n\n${rows.join('\n') || '暂无'}`, data, success: true };
     } catch (e) {
@@ -588,7 +595,7 @@ const createSaRuntime = (ctx?: SaRuntimeContext) => ({
       });
       const rows = (data ?? []).map(
         (it: any) =>
-          `**${it.networkType ?? '未知'}**: 在线${it.onlineCount ?? 0}，离线${it.offlineCount ?? 0}，老旧${it.oldDeviceCount ?? 0}`,
+          `**${nl(it.networkType) ?? '未知'}**: 在线${it.onlineCount ?? 0}，离线${it.offlineCount ?? 0}，老旧${it.oldDeviceCount ?? 0}`,
       );
       return { content: `## 设备在线统计\n\n${rows.join('\n') || '暂无'}`, data, success: true };
     } catch (e) {
@@ -839,7 +846,7 @@ const createSaRuntime = (ctx?: SaRuntimeContext) => ({
         startTime: args.startTime ?? '',
       });
       return {
-        content: `## 工作建议（${args.networkType ?? 'police'}）\n\n${(data ?? []).map((it: any) => `- ${it.sugContent ?? ''}`).join('\n') || '暂无'}`,
+        content: `## 工作建议（${nl(args.networkType) ?? '未知'}）\n\n${(data ?? []).map((it: any) => `- ${it.sugContent ?? ''}`).join('\n') || '暂无'}`,
         data,
         success: true,
       };
@@ -955,7 +962,7 @@ const createSaRuntime = (ctx?: SaRuntimeContext) => ({
       const rows = records
         .map(
           (r: any, i: number) =>
-            `| ${i + 1} | ${r.ip ?? ''} | ${r.host ?? ''} | ${r.assetDeviceModel ?? ''} | ${r.os ?? ''} | ${r.networkType ?? ''} |`,
+            `| ${i + 1} | ${r.ip ?? ''} | ${r.host ?? ''} | ${r.assetDeviceModel ?? ''} | ${r.os ?? ''} | ${nl(r.networkType) ?? '未知'} |`,
         )
         .join('\n');
       return {

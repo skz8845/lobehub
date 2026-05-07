@@ -1,6 +1,7 @@
 export const IncidentAnalyzerIdentifier = 'lobe-incident-analyzer';
 
 export const IncidentAnalyzerApiName = {
+  decodePayload: 'decodePayload',
   queryAssetByIp: 'queryAssetByIp',
   queryEventDetail: 'queryEventDetail',
   queryIndicatorIntel: 'queryIndicatorIntel',
@@ -12,6 +13,26 @@ export type IncidentAnalyzerApiNameType =
   (typeof IncidentAnalyzerApiName)[keyof typeof IncidentAnalyzerApiName];
 
 // ============ API Args ============
+
+export type DecodeEncoding = 'auto' | 'base64' | 'hex' | 'html' | 'unicode' | 'url';
+
+export interface DecodePayloadArgs {
+  encoding?: DecodeEncoding;
+  payload: string;
+}
+
+export interface DecodeLayer {
+  encoding: string;
+  input: string;
+  layer: number;
+  output: string;
+}
+
+export interface DecodePayloadState {
+  decoded: string;
+  layers: DecodeLayer[];
+  original: string;
+}
 
 export interface QueryEventDetailArgs {
   eventId: string;

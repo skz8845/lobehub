@@ -22,6 +22,18 @@ class IncidentAnalyzerExecutor extends BaseExecutor<typeof IncidentAnalyzerApiNa
   readonly identifier = IncidentAnalyzerIdentifier;
   protected readonly apiEnum = IncidentAnalyzerApiName;
 
+  decodePayload = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
+    try {
+      const r = await lambdaClient.incidentAnalyzer.decodePayload.mutate(p);
+      return makeResult(
+        r,
+        (r as any).data ?? { decoded: p.payload, layers: [], original: p.payload },
+      );
+    } catch (e) {
+      return errResult('解码失败', e);
+    }
+  };
+
   queryEventDetail = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
     try {
       const r = await lambdaClient.incidentAnalyzer.queryEventDetail.mutate(p);
