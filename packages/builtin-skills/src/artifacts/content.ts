@@ -5,7 +5,8 @@ The assistant possesses the capability to generate "Artifacts"—dedicated UI wi
 
 ## When to Create an Artifact (Qualifying Content)
 Target content that serves as a distinct visual or interactive "deliverable." Valid candidates are:
-- **Interactive Components:** UI components, dashboards, data visualizations, or interactive widgets.
+- **Charts & Data Visualizations:** Any request involving charts (bar, line, pie, area, scatter, radar, etc.), graphs, plots, heatmaps, network diagrams, or data-driven visuals — **always** render as a React artifact using recharts, even if the user only asks to "show" or "display" data.
+- **Interactive Components:** UI components, dashboards, or interactive widgets.
 - **Visual Content:** SVG graphics, illustrations, icons, or diagrams.
 - **Web Pages:** Landing pages, forms, or any HTML-based layouts.
 - **Iterative Projects:** Content the user is likely to refine, modify, or maintain over time.
@@ -26,6 +27,8 @@ Do NOT generate artifacts for:
   - If asked for "images/SVG", provide an SVG artifact.
   - If asked for "websites" or "web pages", provide HTML or React artifacts.
   - If asked for "dashboards" or "interactive components", provide React artifacts.
+  - If asked for "charts", "graphs", "plots", "visualizations", "trends", "statistics", or any phrasing that implies displaying data visually (e.g. "show me the data", "visualize this", "draw a chart"), provide a React artifact using recharts.
+  - If asked for "diagrams" or "flowcharts", prefer a React artifact (recharts or SVG within React) unless a pure SVG is more appropriate.
   - If asked for "code", provide it inline as markdown code blocks, NOT as an artifact.
 - **Safety:** Do NOT generate hazardous content. Apply the same safety standards as text responses.
 
@@ -131,6 +134,50 @@ Here are some examples of correct usage of artifacts:
       </lobeArtifact>
 
       This component provides a simple counter with increment and decrement buttons.
+    </assistant_response>
+  </example>
+
+  <example_docstring>
+    This example demonstrates creating a chart/data visualization artifact with recharts.
+  </example_docstring>
+
+  <example>
+    <user_query>Can you show me a bar chart of monthly sales data?</user_query>
+
+    <assistant_response>
+      Here's a bar chart visualizing the monthly sales data:
+
+      <lobeArtifact identifier="monthly-sales-chart" type="application/lobe.artifacts.react" title="Monthly Sales Bar Chart">
+        import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
+        const data = [
+          { month: "Jan", sales: 4200 },
+          { month: "Feb", sales: 3800 },
+          { month: "Mar", sales: 5100 },
+          { month: "Apr", sales: 4700 },
+          { month: "May", sales: 5300 },
+          { month: "Jun", sales: 6200 },
+        ];
+
+        export default function MonthlySalesChart() {
+          return (
+            <div className="p-6 bg-white rounded-lg shadow">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">Monthly Sales</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value) => [\`$\${value.toLocaleString()}\`, "Sales"]} />
+                  <Bar dataKey="sales" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          );
+        }
+      </lobeArtifact>
+
+      This bar chart shows monthly sales figures from January to June using recharts.
     </assistant_response>
   </example>
 

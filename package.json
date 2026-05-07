@@ -72,6 +72,7 @@
     "docs:cdn": "npm run workflow:docs-cdn && npm run lint:mdx",
     "docs:i18n": "lobe-i18n md && npm run lint:mdx",
     "docs:seo": "lobe-seo && npm run lint:mdx",
+    "download:artifact-deps": "bun run scripts/downloadArtifactDeps.mts",
     "e2e": "cd e2e && npm run test",
     "e2e:install": "playwright install",
     "e2e:ui": "playwright test --ui",

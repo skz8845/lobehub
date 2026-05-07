@@ -302,6 +302,31 @@ const anthropicChatModels: AIChatModelCard[] = [
     },
     type: 'chat',
   },
+  {
+    abilities: {
+      functionCall: true, // V4 系列全线支持原生 Function Calling
+      vision: true, // V4-Flash 采用了集成的视觉基元技术（Visual Primitives）
+    },
+    contextWindowTokens: 1_000_000, // V4-Flash 原生支持 1M 上下文
+    description:
+      'DeepSeek-V4-Flash is a high-performance, efficient Mixture-of-Experts (MoE) model. It features a 1M context window and advanced visual primitives, delivering industry-leading inference speeds and reasoning capabilities at a fraction of the cost.',
+    displayName: 'DeepSeek V4 Flash',
+    enabled: true,
+    id: 'DeepSeek-V4-Flash',
+    maxOutput: 393_216, // 官方 API 支持的超长最大输出长度（约 384K）
+    pricing: {
+      units: [
+        { name: 'textInput_cacheRead', rate: 0.003, strategy: 'fixed', unit: 'millionTokens' }, // 极低成本的缓存命中价格
+        { name: 'textInput', rate: 0.14, strategy: 'fixed', unit: 'millionTokens' }, // 标准输入价格 $0.14/1M
+        { name: 'textOutput', rate: 0.28, strategy: 'fixed', unit: 'millionTokens' }, // 标准输出价格 $0.28/1M
+      ],
+    },
+    settings: {
+      // 支持开启/关闭思考模式，并可设置推理强度
+      extendParams: ['thinking'],
+    },
+    type: 'chat',
+  },
 ];
 
 export const allModels = [...anthropicChatModels];

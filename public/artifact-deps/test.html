@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artifact Iframe Renderer — 测试页</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+
+    .layout {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* ── header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    .header .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: #0ea5e9;
+      color: #fff;
+    }
+
+    .preset-select {
+      margin-left: auto;
+      padding: 5px 10px;
+      font-size: 12px;
+      background: #334155;
+      border: 1px solid #475569;
+      color: #e2e8f0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .run-btn {
+      padding: 6px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #0ea5e9;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .run-btn:hover {
+      background: #0284c7;
+    }
+
+    /* ── panels ── */
+    .panels {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .editor-panel {
+      width: 46%;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #334155;
+    }
+
+    .editor-label {
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      flex-shrink: 0;
+    }
+
+    #code {
+      flex: 1;
+      width: 100%;
+      padding: 14px;
+      resize: none;
+      outline: none;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12.5px;
+      line-height: 1.7;
+      border: none;
+      tab-size: 2;
+    }
+
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-label {
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #status {
+      font-size: 11px;
+      margin-left: auto;
+    }
+
+    #status.ok {
+      color: #22c55e;
+    }
+
+    #status.err {
+      color: #ef4444;
+    }
+
+    #status.busy {
+      color: #f59e0b;
+    }
+
+    #preview {
+      flex: 1;
+      border: none;
+      background: #fff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+
+    <!-- header -->
+    <div class="header">
+      <h1>Artifact Iframe Renderer</h1>
+      <span class="badge">测试页</span>
+      <select class="preset-select" id="presetSelect">
+        <option value="">── 选择预设 ──</option>
+        <option value="counter">计数器（useState）</option>
+        <option value="barChart">柱状图（recharts）</option>
+        <option value="lineChart">折线图（recharts）</option>
+        <option value="pieChart">饼图（recharts）</option>
+        <option value="icons">图标（lucide-react）</option>
+        <option value="card">卡片（shadcn/ui）</option>
+        <option value="tabs">标签页（shadcn/ui）</option>
+        <option value="table">表格（shadcn/ui）</option>
+        <option value="dashboard">综合仪表盘</option>
+      </select>
+      <button class="run-btn" id="runBtn">▶ 运行</button>
+    </div>
+
+    <!-- panels -->
+    <div class="panels">
+
+      <!-- editor -->
+      <div class="editor-panel">
+        <div class="editor-label">App.tsx</div>
+        <textarea id="code" spellcheck="false"></textarea>
+      </div>
+
+      <!-- preview -->
+      <div class="preview-panel">
+        <div class="preview-label">
+          预览
+          <span id="status" class="ok">就绪</span>
+        </div>
+        <iframe id="preview" sandbox="allow-scripts"></iframe>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ─── Preset examples ────────────────────────────────────────────────────────
+
+    const PRESETS = {
+      counter: `import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Minus, Plus } from "lucide-react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <Card className="w-64">
+        <CardHeader>
+          <CardTitle className="text-center">计数器</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center gap-4">
+          <Button variant="outline" size="icon" onClick={() => setCount(c => c - 1)}>
+            <Minus className="h-4 w-4" />
+          </Button>
+          <span className="text-4xl font-bold w-16 text-center">{count}</span>
+          <Button variant="outline" size="icon" onClick={() => setCount(c => c + 1)}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}`,
+
+      barChart: `import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
+const data = [
+  { month: "1月", 销售额: 4200 },
+  { month: "2月", 销售额: 3800 },
+  { month: "3月", 销售额: 5100 },
+  { month: "4月", 销售额: 4700 },
+  { month: "5月", 销售额: 5300 },
+  { month: "6月", 销售额: 6200 },
+];
+
+export default function BarChartDemo() {
+  return (
+    <div className="p-6 bg-white min-h-screen">
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">月度销售额</h2>
+      <ResponsiveContainer width="100%" height={320}>
+        <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="month" />
+          <YAxis />
+          <Tooltip formatter={v => ["¥" + v.toLocaleString(), "销售额"]} />
+          <Bar dataKey="销售额" fill="#6366f1" radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}`,
+
+      lineChart: `import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+const data = [
+  { name: "周一", 访客: 400, 转化: 240 },
+  { name: "周二", 访客: 300, 转化: 139 },
+  { name: "周三", 访客: 600, 转化: 380 },
+  { name: "周四", 访客: 800, 转化: 430 },
+  { name: "周五", 访客: 500, 转化: 280 },
+  { name: "周六", 访客: 900, 转化: 490 },
+  { name: "周日", 访客: 700, 转化: 380 },
+];
+
+export default function LineChartDemo() {
+  return (
+    <div className="p-6 bg-white min-h-screen">
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">本周流量趋势</h2>
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="name" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line type="monotone" dataKey="访客" stroke="#6366f1" strokeWidth={2} dot={{ r: 4 }} />
+          <Line type="monotone" dataKey="转化" stroke="#f59e0b" strokeWidth={2} dot={{ r: 4 }} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}`,
+
+      pieChart: `import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+const data = [
+  { name: "直接访问", value: 400 },
+  { name: "搜索引擎", value: 300 },
+  { name: "社交媒体", value: 200 },
+  { name: "邮件推广", value: 100 },
+];
+const COLORS = ["#6366f1", "#0ea5e9", "#f59e0b", "#10b981"];
+
+export default function PieChartDemo() {
+  return (
+    <div className="p-6 bg-white min-h-screen">
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">流量来源分布</h2>
+      <ResponsiveContainer width="100%" height={320}>
+        <PieChart>
+          <Pie data={data} cx="50%" cy="50%" outerRadius={110} dataKey="value" label={({ name, percent }) => name + " " + (percent * 100).toFixed(0) + "%"}>
+            {data.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+          </Pie>
+          <Tooltip />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}`,
+
+      icons: `import { Camera, Heart, Star, Bell, Shield, Zap, Globe, Lock } from "lucide-react";
+
+const icons = [
+  { Icon: Camera, name: "Camera", color: "#6366f1" },
+  { Icon: Heart,  name: "Heart",  color: "#ef4444" },
+  { Icon: Star,   name: "Star",   color: "#f59e0b" },
+  { Icon: Bell,   name: "Bell",   color: "#0ea5e9" },
+  { Icon: Shield, name: "Shield", color: "#10b981" },
+  { Icon: Zap,    name: "Zap",    color: "#f97316" },
+  { Icon: Globe,  name: "Globe",  color: "#8b5cf6" },
+  { Icon: Lock,   name: "Lock",   color: "#64748b" },
+];
+
+export default function IconsDemo() {
+  return (
+    <div className="p-8 bg-slate-50 min-h-screen">
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">lucide-react 图标</h2>
+      <div className="grid grid-cols-4 gap-4">
+        {icons.map(({ Icon, name, color }) => (
+          <div key={name} className="flex flex-col items-center gap-2 p-4 bg-white rounded-lg shadow-sm">
+            <Icon size={32} color={color} />
+            <span className="text-xs text-gray-500">{name}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}`,
+
+      card: `import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Star } from "lucide-react";
+
+export default function CardDemo() {
+  return (
+    <div className="p-8 bg-slate-50 min-h-screen flex gap-4 flex-wrap">
+      {[
+        { title: "基础套餐", price: "¥99", desc: "适合个人用户", badge: "推荐", stars: 4 },
+        { title: "专业套餐", price: "¥299", desc: "适合中小团队", badge: "热门", stars: 5 },
+        { title: "企业套餐", price: "¥999", desc: "适合大型企业", badge: "定制", stars: 5 },
+      ].map(({ title, price, desc, badge, stars }) => (
+        <Card key={title} className="w-64">
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <CardTitle>{title}</CardTitle>
+              <Badge>{badge}</Badge>
+            </div>
+            <CardDescription>{desc}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-slate-900">{price}<span className="text-sm font-normal text-slate-500">/月</span></p>
+            <div className="flex gap-0.5 mt-2">
+              {Array.from({ length: stars }).map((_, i) => <Star key={i} size={14} fill="#f59e0b" color="#f59e0b" />)}
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full">立即购买</Button>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  );
+}`,
+
+      tabs: `import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+
+export default function TabsDemo() {
+  return (
+    <div className="p-8 bg-slate-50 min-h-screen">
+      <h2 className="text-xl font-semibold mb-6 text-gray-800">标签页组件</h2>
+      <Tabs defaultValue="overview" className="w-full max-w-lg">
+        <TabsList>
+          <TabsTrigger value="overview">概览</TabsTrigger>
+          <TabsTrigger value="analytics">分析</TabsTrigger>
+          <TabsTrigger value="settings">设置</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview">
+          <Card><CardContent className="pt-4 text-sm text-slate-600">这里显示概览内容，包括关键指标和最新动态。</CardContent></Card>
+        </TabsContent>
+        <TabsContent value="analytics">
+          <Card><CardContent className="pt-4 text-sm text-slate-600">这里显示分析数据，包括用户行为和转化漏斗。</CardContent></Card>
+        </TabsContent>
+        <TabsContent value="settings">
+          <Card><CardContent className="pt-4 text-sm text-slate-600">这里显示系统设置，包括通知偏好和账号管理。</CardContent></Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}`,
+
+      table: `import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+
+const rows = [
+  { name: "张伟", role: "前端工程师", dept: "技术部", status: "在职" },
+  { name: "李娜", role: "产品经理",   dept: "产品部", status: "在职" },
+  { name: "王芳", role: "UI 设计师",  dept: "设计部", status: "休假" },
+  { name: "刘洋", role: "后端工程师", dept: "技术部", status: "在职" },
+  { name: "陈静", role: "数据分析师", dept: "数据部", status: "在职" },
+];
+
+export default function TableDemo() {
+  return (
+    <div className="p-6 bg-white min-h-screen">
+      <h2 className="text-xl font-semibold mb-4 text-gray-800">员工列表</h2>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>姓名</TableHead>
+            <TableHead>职位</TableHead>
+            <TableHead>部门</TableHead>
+            <TableHead>状态</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map(r => (
+            <TableRow key={r.name}>
+              <TableCell className="font-medium">{r.name}</TableCell>
+              <TableCell>{r.role}</TableCell>
+              <TableCell>{r.dept}</TableCell>
+              <TableCell>
+                <Badge variant={r.status === "在职" ? "default" : "secondary"}>{r.status}</Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}`,
+
+      dashboard: `import { useState } from "react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, Users, ShoppingCart, DollarSign } from "lucide-react";
+
+const data = [
+  { day: "周一", 收入: 2400, 用户: 240 },
+  { day: "周二", 收入: 1398, 用户: 221 },
+  { day: "周三", 收入: 9800, 用户: 229 },
+  { day: "周四", 收入: 3908, 用户: 200 },
+  { day: "周五", 收入: 4800, 用户: 218 },
+  { day: "周六", 收入: 3800, 用户: 250 },
+  { day: "周日", 收入: 4300, 用户: 210 },
+];
+
+const stats = [
+  { label: "总收入", value: "¥30,406", icon: DollarSign, color: "#6366f1", change: "+12%" },
+  { label: "活跃用户", value: "1,568", icon: Users,        color: "#0ea5e9", change: "+8%"  },
+  { label: "订单数",  value: "342",    icon: ShoppingCart,  color: "#f59e0b", change: "+5%"  },
+  { label: "增长率",  value: "18.2%",  icon: TrendingUp,    color: "#10b981", change: "+2%"  },
+];
+
+export default function Dashboard() {
+  return (
+    <div className="p-6 bg-slate-50 min-h-screen">
+      <h1 className="text-2xl font-bold mb-6 text-slate-800">数据仪表盘</h1>
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        {stats.map(({ label, value, icon: Icon, color, change }) => (
+          <Card key={label}>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">{label}</p>
+                  <p className="text-2xl font-bold text-slate-800 mt-1">{value}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <Icon size={24} color={color} />
+                  <Badge variant="secondary" style={{ fontSize: 11 }}>{change}</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardHeader><CardTitle>本周收入趋势</CardTitle></CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={data}>
+              <defs>
+                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Area type="monotone" dataKey="收入" stroke="#6366f1" fill="url(#colorRevenue)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}`,
+    };
+
+    // ─── Build the same iframe HTML as IframeRenderer.tsx ────────────────────────
+
+    function safeJsonStr(s) {
+      return JSON.stringify(s).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+    }
+
+    function buildIframeHTML(code, title) {
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</title>
+  <script src="/artifact-deps/tailwind.cdn.js"><\/script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="/artifact-deps/react.production.min.js"><\/script>
+  <script src="/artifact-deps/react-dom.production.min.js"><\/script>
+  <script src="/artifact-deps/prop-types.min.js"><\/script>
+  <script src="/artifact-deps/babel.min.js"><\/script>
+  <script src="/artifact-deps/recharts.min.js"><\/script>
+  <script src="/artifact-deps/lucide-react.min.js"><\/script>
+  <script src="/artifact-deps/artifact-runtime.js"><\/script>
+  <script>
+    (function () {
+      var userCode = ${safeJsonStr(code)};
+      try {
+        var transformed = Babel.transform(userCode, {
+          filename: 'App.tsx',
+          presets: [
+            ['react', { runtime: 'classic' }],
+            ['typescript', { allExtensions: true, isTSX: true }],
+          ],
+          plugins: ['transform-modules-commonjs'],
+        }).code;
+
+        var preamble = 'var React = require("react"); var ReactDOM = require("react-dom");\\n';
+        var mod = { exports: {} };
+        new Function('require', 'module', 'exports', preamble + transformed)(
+          window.__artifactRequire, mod, mod.exports
+        );
+
+        var Component = mod.exports['default'] || mod.exports;
+        if (typeof Component !== 'function') {
+          throw new Error('No default export found. Use "export default function ComponentName() { ... }"');
+        }
+        ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(Component));
+      } catch (e) {
+        document.getElementById('root').innerHTML =
+          '<div style="color:#dc2626;padding:20px;font-family:monospace;font-size:13px;' +
+          'white-space:pre-wrap;background:#fef2f2;border-left:4px solid #dc2626;' +
+          'margin:16px;border-radius:4px"><b>Render Error</b>\\n\\n' +
+          String((e && e.message) || e) + '<\\/div>';
+      }
+    })();
+  <\/script>
+</body>
+</html>`;
+    }
+
+    // ─── Wire up UI ───────────────────────────────────────────────────────────────
+
+    const codeEl = document.getElementById('code');
+    const previewEl = document.getElementById('preview');
+    const statusEl = document.getElementById('status');
+    const runBtn = document.getElementById('runBtn');
+    const presetSel = document.getElementById('presetSelect');
+
+    function run() {
+      const code = codeEl.value.trim();
+      if (!code) return;
+      statusEl.textContent = '渲染中…';
+      statusEl.className = 'busy';
+
+      previewEl.srcdoc = buildIframeHTML(code, 'Artifact Test');
+
+      // Listen for load (success proxy — errors are inside the iframe)
+      previewEl.onload = function () {
+        statusEl.textContent = '完成';
+        statusEl.className = 'ok';
+      };
+    }
+
+    runBtn.addEventListener('click', run);
+
+    codeEl.addEventListener('keydown', function (e) {
+      // Ctrl/Cmd + Enter to run
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); }
+      // Tab → indent
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const s = codeEl.selectionStart, end = codeEl.selectionEnd;
+        codeEl.value = codeEl.value.slice(0, s) + '  ' + codeEl.value.slice(end);
+        codeEl.selectionStart = codeEl.selectionEnd = s + 2;
+      }
+    });
+
+    presetSel.addEventListener('change', function () {
+      const key = presetSel.value;
+      if (key && PRESETS[key]) {
+        codeEl.value = PRESETS[key];
+        run();
+      }
+    });
+
+    // Load default preset on open
+    codeEl.value = PRESETS.counter;
+    run();
+  </script>
+</body>
+
+</html>
