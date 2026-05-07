@@ -2,11 +2,13 @@ export const IncidentAnalyzerIdentifier = 'lobe-incident-analyzer';
 
 export const IncidentAnalyzerApiName = {
   decodePayload: 'decodePayload',
+  getScenarioGuide: 'getScenarioGuide',
   queryAssetByIp: 'queryAssetByIp',
   queryEventDetail: 'queryEventDetail',
   queryIndicatorIntel: 'queryIndicatorIntel',
   queryIpEvents: 'queryIpEvents',
   queryIpVulnerabilities: 'queryIpVulnerabilities',
+  replayRequest: 'replayRequest',
 } as const;
 
 export type IncidentAnalyzerApiNameType =
@@ -61,6 +63,18 @@ export interface QueryIndicatorIntelArgs {
   type?: 'domain' | 'hash' | 'ip' | 'url';
 }
 
+export interface GetScenarioGuideArgs {
+  eventName?: string;
+  subType?: string;
+  type?: number;
+}
+
+export interface GetScenarioGuideState {
+  guide: string;
+  id: string;
+  name: string;
+}
+
 export interface QueryIpVulnerabilitiesArgs {
   endTime?: string;
   ip: string;
@@ -71,6 +85,39 @@ export interface QueryIpVulnerabilitiesArgs {
   startTime?: string;
   subTypeIn?: string[];
   typeIn?: string[];
+}
+
+export type ReplayProtocol = 'ftp' | 'http' | 'https' | 'rdp' | 'ssh';
+
+export type ReplayAuthResult = 'error' | 'failed' | 'success' | 'timeout';
+
+export interface ReplayRequestArgs {
+  // HTTP/HTTPS — 无原始报文时的结构化输入
+  body?: string;
+  headers?: Record<string, string>;
+  // SSH / FTP / RDP 凭据
+  host: string;
+  password?: string;
+  port?: number;
+  protocol: ReplayProtocol;
+  queryParams?: string;
+  // HTTP/HTTPS — 优先使用原始报文（明文时直接传入）
+  rawRequest?: string;
+  timeout?: number;
+  username?: string;
+}
+
+export interface ReplayRequestState {
+  authResult: ReplayAuthResult;
+  error?: string;
+  host: string;
+  latency?: number;
+  port?: number;
+  protocol: ReplayProtocol;
+  responseBody?: string;
+  responseHeaders?: Record<string, string>;
+  statusCode?: number;
+  success: boolean;
 }
 
 // ============ Response Types ============

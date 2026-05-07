@@ -22,6 +22,15 @@ class IncidentAnalyzerExecutor extends BaseExecutor<typeof IncidentAnalyzerApiNa
   readonly identifier = IncidentAnalyzerIdentifier;
   protected readonly apiEnum = IncidentAnalyzerApiName;
 
+  getScenarioGuide = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
+    try {
+      const r = await lambdaClient.incidentAnalyzer.getScenarioGuide.mutate(p);
+      return makeResult(r, (r as any).data ?? null);
+    } catch (e) {
+      return errResult('获取场景指引失败', e);
+    }
+  };
+
   decodePayload = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
     try {
       const r = await lambdaClient.incidentAnalyzer.decodePayload.mutate(p);
@@ -96,6 +105,15 @@ class IncidentAnalyzerExecutor extends BaseExecutor<typeof IncidentAnalyzerApiNa
       });
     } catch (e) {
       return errResult('查询威胁情报失败', e);
+    }
+  };
+
+  replayRequest = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
+    try {
+      const r = await lambdaClient.incidentAnalyzer.replayRequest.mutate(p);
+      return makeResult(r, (r as any).data ?? null);
+    } catch (e) {
+      return errResult('请求回放失败', e);
     }
   };
 }

@@ -1,6 +1,11 @@
 import { createHash } from 'node:crypto';
+import { createConnection } from 'node:net';
 
-import { IncidentAnalyzerIdentifier } from '@lobechat/builtin-tool-incident-analyzer';
+import {
+  detectScenario,
+  IncidentAnalyzerIdentifier,
+  SCENARIO_GUIDES,
+} from '@lobechat/builtin-tool-incident-analyzer';
 import debug from 'debug';
 
 import { type ServerRuntimeRegistration } from './types';
@@ -203,6 +208,309 @@ function decodePayloadPure(
   return { decoded: current, layers, original: payload };
 }
 
+// ─── Request replay ───────────────────────────────────────────────────────────
+
+type ReplayAuthResult = 'error' | 'failed' | 'success' | 'timeout';
+
+function makeReplayResult(
+  authResult: ReplayAuthResult,
+  protocol: string,
+  host: string,
+  latency: number,
+  extra?: { error?: string; port?: number; responseBody?: string; statusCode?: number },
+) {
+  const LABEL: Record<ReplayAuthResult, string> = {
+    error: '连接错误',
+    failed: '认证失败',
+    success: '认证成功（高危）',
+    timeout: '连接超时',
+  };
+  const data = {
+    authResult,
+    host,
+    latency,
+    protocol,
+    success: authResult === 'success',
+    ...extra,
+  };
+  const lines = [
+    `## 请求回放结果 [${LABEL[authResult]}]`,
+    `**协议**: ${protocol.toUpperCase()} | **目标**: ${host}${extra?.port ? `:${extra.port}` : ''} | **延迟**: ${latency}ms`,
+    extra?.statusCode != null ? `**HTTP状态码**: ${extra.statusCode}` : '',
+    extra?.error ? `**错误**: ${extra.error}` : '',
+    extra?.responseBody ? `**响应摘要**: ${extra.responseBody.slice(0, 200)}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+  return { content: lines, data, success: true };
+}
+
+interface ParsedHttpRequest {
+  body: string;
+  headers: Record<string, string>;
+  method: string;
+  path: string;
+}
+
+function parseRawHttpRequest(raw: string): ParsedHttpRequest {
+  const normalized = raw.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+  const blankLine = normalized.indexOf('\n\n');
+  const headerSection = blankLine >= 0 ? normalized.slice(0, blankLine) : normalized;
+  const body = blankLine >= 0 ? normalized.slice(blankLine + 2) : '';
+
+  const lines = headerSection.split('\n');
+  const requestLine = lines[0] ?? '';
+  const parts = requestLine.split(' ');
+  const method = parts[0] ?? 'GET';
+  const path = parts[1] ?? '/';
+
+  const headers: Record<string, string> = {};
+  for (const line of lines.slice(1)) {
+    const colon = line.indexOf(':');
+    if (colon > 0) {
+      headers[line.slice(0, colon).trim().toLowerCase()] = line.slice(colon + 1).trim();
+    }
+  }
+
+  return { body, headers, method, path };
+}
+
+async function replayHttp(args: {
+  body?: string;
+  headers?: Record<string, string>;
+  host: string;
+  port?: number;
+  protocol: string;
+  queryParams?: string;
+  rawRequest?: string;
+  start: number;
+  timeout: number;
+}) {
+  const {
+    protocol,
+    host,
+    port,
+    rawRequest,
+    body,
+    queryParams,
+    headers = {},
+    timeout,
+    start,
+  } = args;
+  const targetPort = port ?? (protocol === 'https' ? 443 : 80);
+
+  let method: string;
+  let path: string;
+  let resolvedBody: string | undefined;
+  let resolvedHeaders: Record<string, string>;
+
+  if (rawRequest) {
+    const parsed = parseRawHttpRequest(rawRequest);
+    method = parsed.method;
+    path = parsed.path;
+    resolvedBody = parsed.body || undefined;
+    resolvedHeaders = { ...parsed.headers, ...headers };
+  } else {
+    resolvedBody = body;
+    resolvedHeaders = { 'content-type': 'application/x-www-form-urlencoded', ...headers };
+    const hasBody = !!body;
+    method = hasBody ? 'POST' : 'GET';
+    path = queryParams ? `/?${queryParams}` : '/';
+  }
+
+  const url = `${protocol}://${host}:${targetPort}${path.startsWith('/') ? path : `/${path}`}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout * 1000);
+
+  try {
+    const res = await fetch(url, {
+      body: resolvedBody ?? undefined,
+      headers: resolvedHeaders,
+      method,
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+
+    const latency = Date.now() - start;
+    let responseText = '';
+    try {
+      responseText = await res.text();
+    } catch {
+      /* empty */
+    }
+
+    let authResult: ReplayAuthResult;
+    if (res.status >= 200 && res.status < 300) {
+      const failPattern =
+        /登录失败|login\s*fail|invalid\s*(?:user|pass|cred)|incorrect|wrong\s*pass|unauthorized|authentication\s*fail/i;
+      authResult = failPattern.test(responseText) ? 'failed' : 'success';
+    } else if (res.status === 301 || res.status === 302) {
+      const loc = res.headers.get('location') ?? '';
+      authResult = /login|error|fail|denied/i.test(loc) ? 'failed' : 'success';
+    } else if (res.status === 401 || res.status === 403) {
+      authResult = 'failed';
+    } else {
+      authResult = 'error';
+    }
+
+    return makeReplayResult(authResult, protocol, host, latency, {
+      port: targetPort,
+      responseBody: responseText,
+      statusCode: res.status,
+    });
+  } catch (e: any) {
+    clearTimeout(timer);
+    if (e.name === 'AbortError') {
+      return makeReplayResult('timeout', protocol, host, Date.now() - start, {
+        port: targetPort,
+      });
+    }
+    throw e;
+  }
+}
+
+function replayFtp(args: {
+  host: string;
+  password?: string;
+  port: number;
+  start: number;
+  timeout: number;
+  username?: string;
+}): Promise<ReturnType<typeof makeReplayResult>> {
+  return new Promise((resolve) => {
+    const { host, port, username = 'anonymous', password = '', timeout, start } = args;
+    const socket = createConnection({ host, port });
+    let buffer = '';
+    let stage: 'banner' | 'pass' | 'user' = 'banner';
+
+    const done = (authResult: ReplayAuthResult, error?: string) => {
+      timer.unref();
+      socket.destroy();
+      resolve(makeReplayResult(authResult, 'ftp', host, Date.now() - start, { error, port }));
+    };
+
+    const timer = setTimeout(() => done('timeout'), timeout * 1000);
+
+    socket.on('data', (chunk: Buffer) => {
+      buffer += chunk.toString();
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) {
+        const code = Number.parseInt(line.slice(0, 3), 10);
+        if (Number.isNaN(code)) continue;
+        if (stage === 'banner' && code === 220) {
+          stage = 'user';
+          socket.write(`USER ${username}\r\n`);
+        } else if (stage === 'user') {
+          if (code === 230) {
+            done('success');
+            return;
+          } else if (code === 331) {
+            stage = 'pass';
+            socket.write(`PASS ${password}\r\n`);
+          } else {
+            done('failed');
+            return;
+          }
+        } else if (stage === 'pass') {
+          done(code === 230 ? 'success' : 'failed');
+          return;
+        }
+      }
+    });
+
+    socket.on('error', (e: Error) => done('error', e.message));
+    socket.on('timeout', () => done('timeout'));
+    socket.setTimeout(timeout * 1000);
+  });
+}
+
+async function replaySsh(args: {
+  host: string;
+  password?: string;
+  port: number;
+  start: number;
+  timeout: number;
+  username?: string;
+}): Promise<ReturnType<typeof makeReplayResult>> {
+  const { host, port, username = 'root', password = '', timeout, start } = args;
+
+  let ssh2: any;
+  try {
+    ssh2 = await import('ssh2');
+  } catch {
+    // ssh2 not installed — fall back to TCP reachability check
+    return replayTcpCheck({ host, port, protocol: 'ssh', start, timeout });
+  }
+
+  return new Promise((resolve) => {
+    const client = new ssh2.Client();
+    let resolved = false;
+
+    const done = (authResult: ReplayAuthResult, error?: string) => {
+      if (resolved) return;
+      resolved = true;
+      timer.unref();
+      try {
+        client.end();
+      } catch {}
+      resolve(makeReplayResult(authResult, 'ssh', host, Date.now() - start, { error, port }));
+    };
+
+    const timer = setTimeout(() => done('timeout'), timeout * 1000);
+
+    client
+      .on('ready', () => done('success'))
+      .on('error', (e: Error) => {
+        const msg = e.message.toLowerCase();
+        const isAuthFail =
+          msg.includes('auth') ||
+          msg.includes('permission denied') ||
+          msg.includes('keyboard-interactive');
+        done(isAuthFail ? 'failed' : 'error', e.message);
+      })
+      .connect({
+        host,
+        password,
+        port,
+        readyTimeout: timeout * 1000,
+        tryKeyboard: false,
+        username,
+      });
+  });
+}
+
+function replayTcpCheck(args: {
+  host: string;
+  port: number;
+  protocol: string;
+  start: number;
+  timeout: number;
+}): Promise<ReturnType<typeof makeReplayResult>> {
+  return new Promise((resolve) => {
+    const { host, port, protocol, start, timeout } = args;
+    const socket = createConnection({ host, port });
+    let settled = false;
+
+    const done = (authResult: ReplayAuthResult, error?: string) => {
+      if (settled) return;
+      settled = true;
+      timer.unref();
+      socket.destroy();
+      resolve(makeReplayResult(authResult, protocol, host, Date.now() - start, { error, port }));
+    };
+
+    const timer = setTimeout(() => done('timeout', '连接超时'), timeout * 1000);
+
+    socket.on('connect', () =>
+      done('error', `端口 ${port} 可达，但 ${protocol.toUpperCase()} 凭据验证需要专用客户端库`),
+    );
+    socket.on('error', (e: Error) => done('error', e.message));
+    socket.on('timeout', () => done('timeout', '连接超时'));
+    socket.setTimeout(timeout * 1000);
+  });
+}
+
 // ─── Runtime factory ──────────────────────────────────────────────────────────
 
 const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
@@ -383,6 +691,74 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
       return { content: `查询脆弱性失败: ${(e as Error).message}`, success: false };
     }
   },
+  getScenarioGuide: async (args: any) => {
+    const { type, subType, eventName } = args;
+    const id = detectScenario(type, subType, eventName);
+    const scenario = SCENARIO_GUIDES[id];
+    const content = [
+      `## 专项分析指引：场景 ${id} — ${scenario.name}`,
+      '',
+      scenario.guide.trim(),
+    ].join('\n');
+    return {
+      content,
+      data: { guide: scenario.guide.trim(), id, name: scenario.name },
+      success: true,
+    };
+  },
+
+  replayRequest: async (args: any) => {
+    const {
+      protocol,
+      host,
+      port,
+      username,
+      password,
+      rawRequest,
+      queryParams,
+      headers,
+      body,
+      timeout = 10,
+    } = args;
+    const start = Date.now();
+    log('replayRequest %s %s', protocol, host);
+    try {
+      switch (protocol) {
+        case 'http':
+        case 'https': {
+          return await replayHttp({
+            body,
+            headers,
+            host,
+            port,
+            protocol,
+            queryParams,
+            rawRequest,
+            start,
+            timeout,
+          });
+        }
+        case 'ssh': {
+          return await replaySsh({ host, password, port: port ?? 22, start, timeout, username });
+        }
+        case 'ftp': {
+          return await replayFtp({ host, password, port: port ?? 21, start, timeout, username });
+        }
+        case 'rdp': {
+          return replayTcpCheck({ host, port: port ?? 3389, protocol: 'rdp', start, timeout });
+        }
+        default: {
+          return { content: `不支持的协议: ${protocol}`, success: false };
+        }
+      }
+    } catch (e) {
+      return makeReplayResult('error', protocol, host, Date.now() - start, {
+        error: (e as Error).message,
+        port,
+      });
+    }
+  },
+
   decodePayload: async (args: any) => {
     try {
       const { payload, encoding } = args;

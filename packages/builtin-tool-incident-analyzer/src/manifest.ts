@@ -47,6 +47,43 @@ export const IncidentAnalyzerManifest: BuiltinToolManifest = {
       },
     },
     {
+      description: `根据事件的 type、subType、eventName 自动匹配场景并返回专项分析指引。
+
+### 匹配逻辑
+服务端通过确定性规则匹配以下 14 个场景（每次只返回一个最精确的匹配）：
+- 场景 A：弱口令 / 暴力破解
+- 场景 B：Web 应用攻击
+- 场景 C：漏洞利用与渗透
+- 场景 D：安全扫描 / 异常扫描
+- 场景 E：违规行为（外联/代理/远控/接入/进程/配置违规）
+- 场景 F：恶意程序 / C2 通信 / 后门 / 僵尸网络
+- 场景 G：DoS / DDoS 攻击
+- 场景 H：欺骗劫持
+- 场景 I：用户行为异常
+- 场景 J：APT 事件
+- 场景 K：数据安全事件
+- 场景 L：设备健康 / 物联网 / 无人机安全
+- 场景 M：互联网安全事件
+- 场景 N：其他 / 兜底处理
+
+### 返回内容
+返回该场景的完整专项分析指引，包含必须执行的分析节和注意事项。
+
+### 调用时机
+获取 queryEventDetail 结果后**立即调用**，在其他查询前先确定分析框架。`,
+      name: IncidentAnalyzerApiName.getScenarioGuide,
+      parameters: {
+        additionalProperties: false,
+        properties: {
+          eventName: { description: '事件名称（用于关键词匹配，如"SSH暴力破解"）', type: 'string' },
+          subType: { description: '事件二级类型编码（如 "320701"、"v_3001"）', type: 'string' },
+          type: { description: '事件一级类型编码（数字，如 33、34、35、41）', type: 'number' },
+        },
+        required: [],
+        type: 'object',
+      },
+    },
+    {
       description: `按安全事件唯一标识（UUID 或数字 ID）查询事件完整详情。
 
 ### 返回字段
@@ -167,6 +204,71 @@ ip | domain | url | hash
           },
         },
         required: ['indicator'],
+        type: 'object',
+      },
+    },
+    {
+      description: `对弱口令/暴力破解事件中的请求进行回放，验证凭据是否真实有效。
+
+### 支持协议
+- http / https：HTTP 表单或接口认证回放
+- ssh：SSH 密码认证验证
+- ftp：FTP 登录验证
+- rdp：RDP 凭据验证
+
+### HTTP/HTTPS 传参策略（二选一）
+1. **rawRequest**（优先）：message 中存在明文 HTTP 报文时，将整段报文原样传入，服务端自动解析方法、路径、请求头、请求体
+2. **结构化**：无明文报文时，分别传入 queryParams（GET 参数）、body（POST 请求体）、headers（请求头）
+
+### 回放结果（authResult）
+- success：凭据有效，认证成功 → 直接判定为**真实攻击成功**
+- failed：凭据无效，认证拒绝 → 倾向**真实攻击失败**
+- timeout：连接超时，目标不可达 → 结合其他证据判断
+- error：协议错误或连接被拒绝 → 可能服务不存在，倾向**误报**或攻击失败
+
+### 注意
+- 仅在弱口令/暴力破解场景（场景 A）且报文中存在明文凭据时调用
+- 根据目标端口自动选择协议：22→ssh、21→ftp、3389→rdp、80/8080→http、443/8443→https`,
+      name: IncidentAnalyzerApiName.replayRequest,
+      parameters: {
+        additionalProperties: false,
+        properties: {
+          body: {
+            description:
+              '[HTTP/HTTPS 结构化] POST 请求体，如 username=admin&password=123456 或 JSON 字符串',
+            type: 'string',
+          },
+          headers: {
+            additionalProperties: { type: 'string' },
+            description: '[HTTP/HTTPS 结构化] 需要附加的请求头（键值对）',
+            type: 'object',
+          },
+          host: { description: '目标主机 IP 或域名', type: 'string' },
+          password: { description: '[SSH/FTP/RDP] 登录密码', type: 'string' },
+          port: {
+            description:
+              '目标端口（不填则使用协议默认端口：ssh=22、ftp=21、rdp=3389、http=80、https=443）',
+            type: 'number',
+          },
+          protocol: {
+            description: '协议类型：http / https / ssh / ftp / rdp',
+            enum: ['ftp', 'http', 'https', 'rdp', 'ssh'],
+            type: 'string',
+          },
+          queryParams: {
+            description:
+              '[HTTP/HTTPS 结构化] GET 请求参数，URL 编码字符串，如 user=admin&pass=123456',
+            type: 'string',
+          },
+          rawRequest: {
+            description:
+              '[HTTP/HTTPS 优先] 从 message 中提取的原始明文 HTTP 报文，包含请求行、请求头、请求体的完整文本',
+            type: 'string',
+          },
+          timeout: { default: 10, description: '超时时间（秒，默认 10）', type: 'number' },
+          username: { description: '[SSH/FTP/RDP] 登录用户名', type: 'string' },
+        },
+        required: ['protocol', 'host'],
         type: 'object',
       },
     },

@@ -11,6 +11,16 @@ const rt = (ctx: AuthContext) =>
   });
 
 export const incidentAnalyzerRouter = router({
+  getScenarioGuide: authedProcedure
+    .input(
+      z.object({
+        eventName: z.string().optional(),
+        subType: z.string().optional(),
+        type: z.number().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => rt(ctx).getScenarioGuide(input)),
+
   decodePayload: authedProcedure
     .input(
       z.object({
@@ -71,4 +81,21 @@ export const incidentAnalyzerRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => rt(ctx).queryIpEvents(input)),
+
+  replayRequest: authedProcedure
+    .input(
+      z.object({
+        body: z.string().optional(),
+        headers: z.record(z.string()).optional(),
+        host: z.string().min(1),
+        password: z.string().optional(),
+        port: z.number().optional(),
+        protocol: z.enum(['ftp', 'http', 'https', 'rdp', 'ssh']),
+        queryParams: z.string().optional(),
+        rawRequest: z.string().optional(),
+        timeout: z.number().optional(),
+        username: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => rt(ctx).replayRequest(input)),
 });

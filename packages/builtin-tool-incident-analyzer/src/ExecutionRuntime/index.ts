@@ -3,6 +3,8 @@ import type { BuiltinServerRuntimeOutput } from '@lobechat/types';
 import type {
   DecodePayloadArgs,
   DecodePayloadState,
+  GetScenarioGuideArgs,
+  GetScenarioGuideState,
   QueryAssetByIpArgs,
   QueryAssetByIpState,
   QueryEventDetailArgs,
@@ -13,6 +15,8 @@ import type {
   QueryIpEventsState,
   QueryIpVulnerabilitiesArgs,
   QueryIpVulnerabilitiesState,
+  ReplayRequestArgs,
+  ReplayRequestState,
 } from '../types';
 
 export interface IncidentAnalyzerServiceResult {
@@ -23,6 +27,7 @@ export interface IncidentAnalyzerServiceResult {
 
 export interface IncidentAnalyzerService {
   decodePayload?: (args: DecodePayloadArgs) => Promise<IncidentAnalyzerServiceResult>;
+  getScenarioGuide?: (args: GetScenarioGuideArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryAssetByIp: (args: QueryAssetByIpArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryEventDetail: (args: QueryEventDetailArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryIndicatorIntel: (args: QueryIndicatorIntelArgs) => Promise<IncidentAnalyzerServiceResult>;
@@ -30,6 +35,7 @@ export interface IncidentAnalyzerService {
   queryIpVulnerabilities: (
     args: QueryIpVulnerabilitiesArgs,
   ) => Promise<IncidentAnalyzerServiceResult>;
+  replayRequest?: (args: ReplayRequestArgs) => Promise<IncidentAnalyzerServiceResult>;
 }
 
 export class IncidentAnalyzerExecutionRuntime {
@@ -37,6 +43,20 @@ export class IncidentAnalyzerExecutionRuntime {
 
   constructor(service: IncidentAnalyzerService) {
     this.service = service;
+  }
+
+  async getScenarioGuide(args: GetScenarioGuideArgs): Promise<BuiltinServerRuntimeOutput> {
+    if (this.service.getScenarioGuide) {
+      try {
+        const result = await this.service.getScenarioGuide(args);
+        if (!result.success) return { content: result.content, success: false };
+        const state: GetScenarioGuideState = result.data ?? { guide: '', id: 'N', name: '其他' };
+        return { content: result.content, state, success: true };
+      } catch (e) {
+        return { content: `获取场景指引失败: ${(e as Error).message}`, error: e, success: false };
+      }
+    }
+    return { content: '场景指引服务不可用', success: false };
   }
 
   async decodePayload(args: DecodePayloadArgs): Promise<BuiltinServerRuntimeOutput> {
@@ -140,5 +160,25 @@ export class IncidentAnalyzerExecutionRuntime {
     } catch (e) {
       return { content: `查询威胁情报失败: ${(e as Error).message}`, error: e, success: false };
     }
+  }
+
+  async replayRequest(args: ReplayRequestArgs): Promise<BuiltinServerRuntimeOutput> {
+    if (this.service.replayRequest) {
+      try {
+        const result = await this.service.replayRequest(args);
+        if (!result.success) return { content: result.content, success: false };
+        const state: ReplayRequestState = result.data ?? {
+          authResult: 'error',
+          host: args.host,
+          port: args.port,
+          protocol: args.protocol,
+          success: false,
+        };
+        return { content: result.content, state, success: true };
+      } catch (e) {
+        return { content: `请求回放失败: ${(e as Error).message}`, error: e, success: false };
+      }
+    }
+    return { content: '回放服务不可用', success: false };
   }
 }
