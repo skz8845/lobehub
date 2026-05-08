@@ -175,39 +175,6 @@ export const IncidentAnalyzerManifest: BuiltinToolManifest = {
       },
     },
     {
-      description: `查询 IP 地址、域名、URL 或文件哈希的威胁情报，从 MISP 平台获取已知 IOC 记录。
-
-### indicator 支持格式
-- IPv4 地址（如 1.2.3.4）
-- 域名（如 evil.example.com）
-- URL（如 http://evil.example.com/payload）
-- 文件哈希：MD5(32位) / SHA1(40位) / SHA256(64位)
-
-### type 指标类型（可选，自动识别）
-ip | domain | url | hash
-
-### 结果解读
-- to_ids=true 的属性为已确认 IOC（Indicators of Compromise），具有高置信度
-- 命中记录越多、标签越丰富，表明该指标的恶意程度越高`,
-      name: IncidentAnalyzerApiName.queryIndicatorIntel,
-      parameters: {
-        additionalProperties: false,
-        properties: {
-          indicator: {
-            description: '要查询的指标值：IP 地址、域名、URL 或文件哈希',
-            type: 'string',
-          },
-          type: {
-            description: '指标类型（可选，自动识别）：ip, domain, url, hash',
-            enum: ['domain', 'hash', 'ip', 'url'],
-            type: 'string',
-          },
-        },
-        required: ['indicator'],
-        type: 'object',
-      },
-    },
-    {
       description: `对弱口令/暴力破解事件中的请求进行回放，验证凭据是否真实有效。
 
 ### 支持协议

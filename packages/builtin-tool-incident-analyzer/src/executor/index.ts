@@ -92,22 +92,6 @@ class IncidentAnalyzerExecutor extends BaseExecutor<typeof IncidentAnalyzerApiNa
     }
   };
 
-  queryIndicatorIntel = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
-    try {
-      const r = await lambdaClient.incidentAnalyzer.queryIndicatorIntel.mutate(p);
-      if (!r.success) return r as BuiltinToolResult;
-      const records = (r as any).records ?? [];
-      return makeResult(r, {
-        indicator: p.indicator,
-        records,
-        total: records.length,
-        type: (r as any).type ?? 'unknown',
-      });
-    } catch (e) {
-      return errResult('查询威胁情报失败', e);
-    }
-  };
-
   replayRequest = async (p: any, _: BuiltinToolContext): Promise<BuiltinToolResult> => {
     try {
       const r = await lambdaClient.incidentAnalyzer.replayRequest.mutate(p);

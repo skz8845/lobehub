@@ -58,15 +58,6 @@ export const incidentAnalyzerRouter = router({
     )
     .mutation(async ({ ctx, input }) => rt(ctx).queryIpVulnerabilities(input)),
 
-  queryIndicatorIntel: authedProcedure
-    .input(
-      z.object({
-        indicator: z.string().min(1),
-        type: z.enum(['domain', 'hash', 'ip', 'url']).optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => rt(ctx).queryIndicatorIntel(input)),
-
   queryIpEvents: authedProcedure
     .input(
       z.object({

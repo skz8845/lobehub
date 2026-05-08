@@ -9,8 +9,6 @@ import type {
   QueryAssetByIpState,
   QueryEventDetailArgs,
   QueryEventDetailState,
-  QueryIndicatorIntelArgs,
-  QueryIndicatorIntelState,
   QueryIpEventsArgs,
   QueryIpEventsState,
   QueryIpVulnerabilitiesArgs,
@@ -30,7 +28,6 @@ export interface IncidentAnalyzerService {
   getScenarioGuide?: (args: GetScenarioGuideArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryAssetByIp: (args: QueryAssetByIpArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryEventDetail: (args: QueryEventDetailArgs) => Promise<IncidentAnalyzerServiceResult>;
-  queryIndicatorIntel: (args: QueryIndicatorIntelArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryIpEvents: (args: QueryIpEventsArgs) => Promise<IncidentAnalyzerServiceResult>;
   queryIpVulnerabilities: (
     args: QueryIpVulnerabilitiesArgs,
@@ -142,23 +139,6 @@ export class IncidentAnalyzerExecutionRuntime {
       return { content: result.content, state, success: true };
     } catch (e) {
       return { content: `查询脆弱性失败: ${(e as Error).message}`, error: e, success: false };
-    }
-  }
-
-  async queryIndicatorIntel(args: QueryIndicatorIntelArgs): Promise<BuiltinServerRuntimeOutput> {
-    try {
-      const result = await this.service.queryIndicatorIntel(args);
-      if (!result.success) return { content: result.content, success: false };
-      const records = result.data?.records ?? [];
-      const state: QueryIndicatorIntelState = {
-        indicator: args.indicator,
-        records,
-        total: records.length,
-        type: result.data?.type ?? 'unknown',
-      };
-      return { content: result.content, state, success: true };
-    } catch (e) {
-      return { content: `查询威胁情报失败: ${(e as Error).message}`, error: e, success: false };
     }
   }
 

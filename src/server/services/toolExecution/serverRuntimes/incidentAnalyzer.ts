@@ -539,6 +539,8 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
         '',
         `**事件名称**: ${data.eventName ?? '未知'}`,
         `**事件 ID**: ${data.id ?? eventId}`,
+        `**事件类型**: ${data.type ?? ''}`,
+        `**事件子类型**: ${data.subType ?? ''}`,
         `**时间**: ${data.time ?? '未知'}`,
         `**网络**: ${nl(data.networkType)}`,
         `**状态**: ${st(data.status)}`,
@@ -616,7 +618,7 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
 
       if (!records.length) {
         return {
-          content: `未找到 IP ${ip} 的资产记录。该 IP 可能不在资产管理范围内。`,
+          content: `未找到 IP ${ip} 的资产记录。该 IP 可能不在本省市资产管理范围内。`,
           data: [],
           success: true,
         };
@@ -790,77 +792,6 @@ const createIncidentAnalyzerRuntime = (ctx?: SaRuntimeContext) => ({
       return { content: lines.join('\n'), data: result, success: true };
     } catch (e) {
       return { content: `解码失败: ${(e as Error).message}`, success: false };
-    }
-  },
-  queryIndicatorIntel: async (args: any) => {
-    try {
-      const { indicator } = args;
-      const type = args.type ?? detectType(indicator);
-      log('queryIndicatorIntel %s (%s)', indicator, type);
-
-      const rawResponse = await mispPost('/attributes/restSearch', { value: indicator });
-      const rawAttrs: any[] = rawResponse?.response?.Attribute ?? [];
-
-      if (!rawAttrs.length) {
-        return {
-          content: `未找到 "${indicator}" 的威胁情报记录，该指标暂无已知威胁记录。`,
-          data: { records: [], type },
-          success: true,
-        };
-      }
-
-      const records = rawAttrs.map((attr: any) => ({
-        attributes: [attr],
-        event: attr.Event
-          ? {
-              date: attr.Event.date,
-              id: attr.Event.id,
-              info: attr.Event.info,
-              threatLevel: attr.Event.threat_level_id,
-            }
-          : undefined,
-        event_id: attr.event_id,
-        id: attr.id,
-        primaryAttribute: {
-          category: attr.category,
-          comment: attr.comment,
-          tags: attr.Tag?.map((t: any) => ({ colour: t.colour, name: t.name })),
-          timestamp: attr.timestamp,
-          to_ids: Boolean(attr.to_ids),
-          type: attr.type,
-          value: attr.value,
-        },
-      }));
-
-      const iocCount = records.filter((r) => r.primaryAttribute.to_ids).length;
-      const lines = [
-        `## 威胁情报: ${indicator} (${type})`,
-        '',
-        `共 **${records.length}** 条记录，其中 **${iocCount}** 条为已确认 IOC`,
-        '',
-        ...records.slice(0, 5).map((r) => {
-          const p = r.primaryAttribute;
-          const ev = r.event;
-          return [
-            `### 事件 ${r.event_id}${ev?.info ? ` — ${ev.info}` : ''}`,
-            `- **类型**: ${p.type} | **分类**: ${p.category} | **IOC**: ${p.to_ids ? '✅ 已确认' : '❌ 未确认'}`,
-            p.comment ? `- **备注**: ${p.comment}` : '',
-            p.tags?.length ? `- **标签**: ${p.tags.map((t: any) => t.name).join(', ')}` : '',
-          ]
-            .filter(Boolean)
-            .join('\n');
-        }),
-      ];
-
-      return {
-        content: lines.join('\n'),
-        data: { records, total: records.length, type },
-        records,
-        success: true,
-        type,
-      };
-    } catch (e) {
-      return { content: `查询威胁情报失败: ${(e as Error).message}`, success: false };
     }
   },
 });

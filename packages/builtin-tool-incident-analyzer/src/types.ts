@@ -5,7 +5,6 @@ export const IncidentAnalyzerApiName = {
   getScenarioGuide: 'getScenarioGuide',
   queryAssetByIp: 'queryAssetByIp',
   queryEventDetail: 'queryEventDetail',
-  queryIndicatorIntel: 'queryIndicatorIntel',
   queryIpEvents: 'queryIpEvents',
   queryIpVulnerabilities: 'queryIpVulnerabilities',
   replayRequest: 'replayRequest',
@@ -56,11 +55,6 @@ export interface QueryIpEventsArgs {
 export interface QueryAssetByIpArgs {
   ip: string;
   networkType?: string;
-}
-
-export interface QueryIndicatorIntelArgs {
-  indicator: string;
-  type?: 'domain' | 'hash' | 'ip' | 'url';
 }
 
 export interface GetScenarioGuideArgs {
@@ -170,13 +164,6 @@ export interface QueryIpEventsState {
 export interface QueryAssetByIpState {
   assets: AssetDetail[];
   ip: string;
-}
-
-export interface QueryIndicatorIntelState {
-  indicator: string;
-  records: any[];
-  total: number;
-  type: string;
 }
 
 export interface VulnerabilityItem {
