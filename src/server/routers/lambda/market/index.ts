@@ -20,7 +20,6 @@ import {
 import { agentRouter } from './agent';
 import { agentGroupRouter } from './agentGroup';
 import { credsRouter } from './creds';
-import { oidcRouter } from './oidc';
 import { skillRouter } from './skill';
 import { socialRouter } from './social';
 import { socialProfileRouter } from './socialProfile';
@@ -50,10 +49,10 @@ const marketProcedure = publicProcedure
   });
 
 export const marketRouter = router({
-  // ============================== Agent Management (authenticated) ==============================
+  // ============================== Agent Management ==============================
   agent: agentRouter,
 
-  // ============================== Agent Group Management (authenticated) ==============================
+  // ============================== Agent Group Management ==============================
   agentGroup: agentGroupRouter,
 
   // ============================== Credential Management ==============================
@@ -654,9 +653,6 @@ export const marketRouter = router({
         });
       }
     }),
-
-  // ============================== OIDC Authentication ==============================
-  oidc: oidcRouter,
 
   registerClientInMarketplace: marketProcedure.input(z.object({})).mutation(async ({ ctx }) => {
     return ctx.discoverService.registerClient({

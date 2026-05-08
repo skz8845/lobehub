@@ -22,7 +22,6 @@ import useSWR from 'swr';
 import urlJoin from 'url-join';
 
 import PublishedTime from '@/components/PublishedTime';
-import { useMarketAuth } from '@/layout/AuthProvider/MarketAuth';
 import { socialService } from '@/services/social';
 
 import { useDetailContext } from './DetailProvider';
@@ -40,7 +39,6 @@ const Header = memo<{ mobile?: boolean }>(({ mobile: isMobile }) => {
   const { message } = App.useApp();
   const data = useDetailContext();
   const { mobile = isMobile } = useResponsive();
-  const { isAuthenticated, signIn, session } = useMarketAuth();
   const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const {
@@ -58,15 +56,10 @@ const Header = memo<{ mobile?: boolean }>(({ mobile: isMobile }) => {
   const displayAvatar = avatar || title?.[0] || '👥';
   const memberCount = memberAgents?.length || 0;
 
-  // Set access token for social service
-  if (session?.accessToken) {
-    socialService.setAccessToken(session.accessToken);
-  }
-
   // TODO: Use 'group_agent' type when social service supports it
   // Fetch favorite status
   const { data: favoriteStatus, mutate: mutateFavorite } = useSWR(
-    identifier && isAuthenticated ? ['favorite-status', 'agent', identifier] : null,
+    identifier ? ['favorite-status', 'agent', identifier] : null,
     () => socialService.checkFavoriteStatus('agent-group', identifier!),
     { revalidateOnFocus: false },
   );
@@ -74,11 +67,6 @@ const Header = memo<{ mobile?: boolean }>(({ mobile: isMobile }) => {
   const isFavorited = favoriteStatus?.isFavorited ?? false;
 
   const handleFavoriteClick = async () => {
-    if (!isAuthenticated) {
-      await signIn();
-      return;
-    }
-
     if (!identifier) return;
 
     setFavoriteLoading(true);

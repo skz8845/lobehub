@@ -21,9 +21,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import urlJoin from 'url-join';
 
 import PublishedTime from '@/components/PublishedTime';
-import { useMarketAuth } from '@/layout/AuthProvider/MarketAuth';
 import { type FavoritePluginItem } from '@/services/social';
-import { socialService } from '@/services/social';
 import { useDiscoverStore } from '@/store/discover';
 
 import { useUserDetailContext } from './DetailProvider';
@@ -208,17 +206,11 @@ const UserFavoritePlugins = memo<UserFavoritePluginsProps>(({ rows = 4 }) => {
   const { t } = useTranslation('discover');
   const { message } = App.useApp();
   const { user, isOwner } = useUserDetailContext();
-  const { session } = useMarketAuth();
 
   const useFavoritePlugins = useDiscoverStore((s) => s.useFavoritePlugins);
   const removeFavorite = useDiscoverStore((s) => s.removeFavorite);
 
   const { data, mutate } = useFavoritePlugins(user.id);
-
-  // Set access token for social service
-  if (session?.accessToken) {
-    socialService.setAccessToken(session.accessToken);
-  }
 
   const handleUnfavorite = useCallback(
     async (identifier: string) => {

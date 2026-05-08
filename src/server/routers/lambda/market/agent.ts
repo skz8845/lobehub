@@ -101,7 +101,7 @@ const agentProcedure = authedProcedure
     const { UserModel } = await import('@/database/models/user');
     const userModel = new UserModel(ctx.serverDB, ctx.userId);
 
-    // Get user's market accessToken from database (stored by MarketAuthProvider after OIDC login)
+    // Get user's market accessToken from database
     let marketOidcAccessToken: string | undefined;
     try {
       const userState = await userModel.getUserState(async () => ({}));

@@ -9,7 +9,7 @@ import { FileModel } from '@/database/models/file';
 import { type ToolCallContent } from '@/libs/mcp';
 import { authedProcedure, router } from '@/libs/trpc/lambda';
 import { marketUserInfo, serverDatabase, telemetry } from '@/libs/trpc/lambda/middleware';
-import { marketSDK, requireMarketAuth } from '@/libs/trpc/lambda/middleware/marketSDK';
+import { marketSDK } from '@/libs/trpc/lambda/middleware/marketSDK';
 import { isTrustedClientEnabled } from '@/libs/trusted-client';
 import { FileS3 } from '@/server/modules/S3';
 import { DiscoverService } from '@/server/services/discover';
@@ -60,11 +60,7 @@ const lobehubSkillBaseProcedure = authedProcedure
   .use(marketUserInfo)
   .use(marketSDK);
 
-/**
- * LobeHub Skill procedure with required auth
- * Used for routes that require user authentication
- */
-const lobehubSkillAuthProcedure = lobehubSkillBaseProcedure.use(requireMarketAuth);
+const lobehubSkillAuthProcedure = lobehubSkillBaseProcedure;
 
 // ============================== Schema Definitions ==============================
 

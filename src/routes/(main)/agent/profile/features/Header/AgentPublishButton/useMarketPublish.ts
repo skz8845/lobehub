@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 import { message } from '@/components/AntdStaticMethods';
 import { useTokenCount } from '@/hooks/useTokenCount';
-import { useMarketAuth } from '@/layout/AuthProvider/MarketAuth';
 import { lambdaClient } from '@/libs/trpc/client';
 import { useAgentStore } from '@/store/agent';
 import { agentChatConfigSelectors, agentSelectors } from '@/store/agent/selectors';
@@ -41,7 +40,6 @@ export const useMarketPublish = ({ action, onSuccess }: UseMarketPublishOptions)
   const [isCheckingOwnership, setIsCheckingOwnership] = useState(false);
   // Use ref to synchronously track publishing state and avoid race conditions caused by closures
   const isPublishingRef = useRef(false);
-  const { isAuthenticated } = useMarketAuth();
 
   // Agent data from store
   const meta = useAgentStore(agentSelectors.currentAgentMeta, isEqual);
@@ -97,11 +95,6 @@ export const useMarketPublish = ({ action, onSuccess }: UseMarketPublishOptions)
   const publish = useCallback(async () => {
     // Prevent duplicate publishing: use ref for synchronous check to avoid race conditions from closures
     if (isPublishingRef.current) {
-      return { success: false };
-    }
-
-    // Check authentication state - tRPC handles trustedClient automatically
-    if (!isAuthenticated) {
       return { success: false };
     }
 
@@ -189,7 +182,6 @@ export const useMarketPublish = ({ action, onSuccess }: UseMarketPublishOptions)
     chatConfig?.historyCount,
     chatConfig?.searchMode,
     editorData,
-    isAuthenticated,
     isSubmit,
     language,
     meta?.avatar,

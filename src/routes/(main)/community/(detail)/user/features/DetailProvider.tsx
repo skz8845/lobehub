@@ -3,7 +3,6 @@
 import { type ReactNode } from 'react';
 import { createContext, memo, use } from 'react';
 
-import { type MarketUserProfile } from '@/layout/AuthProvider/MarketAuth/types';
 import {
   type DiscoverAssistantItem,
   type DiscoverGroupAgentItem,
@@ -23,7 +22,7 @@ export interface UserDetailContextConfig {
   groupCount: number;
   isOwner: boolean;
   mobile?: boolean;
-  onEditProfile?: (onSuccess?: (profile: MarketUserProfile) => void) => void;
+  onEditProfile?: () => void;
   onStatusChange?: (
     identifier: string,
     action: 'publish' | 'unpublish' | 'deprecate',

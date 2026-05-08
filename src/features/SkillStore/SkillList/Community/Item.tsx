@@ -20,7 +20,6 @@ import PluginAvatar from '@/components/Plugins/PluginAvatar';
 import McpDetail from '@/features/MCP/MCPDetail';
 import McpDetailLoading from '@/features/MCP/MCPDetail/Loading';
 import MCPInstallProgress from '@/features/MCP/MCPInstallProgress';
-import { useMarketAuth } from '@/layout/AuthProvider/MarketAuth';
 import { useAgentStore } from '@/store/agent';
 import { agentSelectors } from '@/store/agent/selectors';
 import { useToolStore } from '@/store/tool';
@@ -54,19 +53,7 @@ const Item = memo<DiscoverMcpItem>(({ name, description, icon, identifier }) => 
     s.togglePlugin,
     agentSelectors.currentAgentPlugins(s).includes(identifier),
   ]);
-  const { isAuthenticated, signIn } = useMarketAuth();
-
-  const isCloudMcp = !!((plugin as any)?.cloudEndPoint || (plugin as any)?.haveCloudEndpoint);
-
   const handleInstall = async () => {
-    if (isCloudMcp && !isAuthenticated) {
-      try {
-        await signIn();
-      } catch {
-        return;
-      }
-    }
-
     const isSuccess = await installMCPPlugin(identifier);
 
     if (isSuccess) {

@@ -55,9 +55,6 @@ export const PROTECTED_KEY_PATTERNS = [
   // File namespace - used in hooks that receive t as parameter
   'file', // TFunction<'file'> passed as parameter
 
-  // MarketAuth namespace - has Trans components with dynamic keys
-  'marketAuth', // <Trans i18nKey="authorize.footer.agreement" />
-
   // Onboarding namespace - has various dynamic usage patterns
   'onboarding', // Onboarding flow with complex Trans usage
   'error',

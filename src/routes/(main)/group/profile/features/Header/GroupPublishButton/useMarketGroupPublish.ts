@@ -3,7 +3,6 @@ import { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { message } from '@/components/AntdStaticMethods';
-import { useMarketAuth } from '@/layout/AuthProvider/MarketAuth';
 import { lambdaClient } from '@/libs/trpc/client';
 import { useAgentGroupStore } from '@/store/agentGroup';
 import { agentGroupSelectors } from '@/store/agentGroup/selectors';
@@ -28,7 +27,6 @@ export const useMarketGroupPublish = ({ action, onSuccess }: UseMarketGroupPubli
   const [isPublishing, setIsPublishing] = useState(false);
   const [isCheckingOwnership, setIsCheckingOwnership] = useState(false);
   const isPublishingRef = useRef(false);
-  const { isAuthenticated } = useMarketAuth();
 
   // Group data from store
   const currentGroup = useAgentGroupStore(agentGroupSelectors.currentGroup);
@@ -79,11 +77,6 @@ export const useMarketGroupPublish = ({ action, onSuccess }: UseMarketGroupPubli
   const publish = useCallback(async () => {
     // Prevent duplicate publishing
     if (isPublishingRef.current) {
-      return { success: false };
-    }
-
-    // Check authentication
-    if (!isAuthenticated) {
       return { success: false };
     }
 
@@ -199,7 +192,6 @@ export const useMarketGroupPublish = ({ action, onSuccess }: UseMarketGroupPubli
     currentGroupAgents,
     currentGroupConfig,
     currentGroupMeta,
-    isAuthenticated,
     isSubmit,
     language,
     onSuccess,

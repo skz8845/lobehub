@@ -5,14 +5,7 @@ import { initReactI18next } from 'react-i18next';
 import { DEFAULT_LANG } from '@/const/locale';
 import { normalizeLocale } from '@/locales/resources';
 
-const AUTH_I18N_NAMESPACES = [
-  'auth',
-  'authError',
-  'common',
-  'error',
-  'marketAuth',
-  'oauth',
-] as const;
+const AUTH_I18N_NAMESPACES = ['auth', 'authError', 'common', 'error', 'oauth'] as const;
 type AuthI18nNamespace = (typeof AUTH_I18N_NAMESPACES)[number];
 
 const isAllowedNamespace = (ns: string): ns is AuthI18nNamespace =>
@@ -31,9 +24,6 @@ const loadDefaultNamespace = async (ns: AuthI18nNamespace) => {
     }
     case 'error': {
       return import('@/locales/default/error');
-    }
-    case 'marketAuth': {
-      return import('@/locales/default/marketAuth');
     }
     case 'oauth': {
       return import('@/locales/default/oauth');
@@ -54,9 +44,6 @@ const loadZhNamespace = async (ns: AuthI18nNamespace) => {
     }
     case 'error': {
       return import('@/../locales/zh-CN/error.json');
-    }
-    case 'marketAuth': {
-      return import('@/../locales/zh-CN/marketAuth.json');
     }
     case 'oauth': {
       return import('@/../locales/zh-CN/oauth.json');

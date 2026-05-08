@@ -33,7 +33,6 @@ import OfficialIcon from '@/components/OfficialIcon';
 import Scores from '@/features/MCP/Scores';
 import { getLanguageColor, getRecommendedDeployment } from '@/features/MCP/utils';
 import { useCategory } from '@/hooks/useMCPCategory';
-import { useMarketAuth } from '@/layout/AuthProvider/MarketAuth';
 import { socialService } from '@/services/social';
 
 import InstallationIcon from '../../components/MCPDepsIcon';
@@ -80,17 +79,11 @@ const Header = memo<{ inModal?: boolean; mobile?: boolean }>(({ mobile: isMobile
     isOfficial,
   } = useDetailContext();
   const { mobile = isMobile } = useResponsive();
-  const { isAuthenticated, signIn, session } = useMarketAuth();
   const [favoriteLoading, setFavoriteLoading] = useState(false);
-
-  // Set access token for social service
-  if (session?.accessToken) {
-    socialService.setAccessToken(session.accessToken);
-  }
 
   // Fetch favorite status
   const { data: favoriteStatus, mutate: mutateFavorite } = useSWR(
-    identifier && isAuthenticated ? ['favorite-status', 'plugin', identifier] : null,
+    identifier ? ['favorite-status', 'plugin', identifier] : null,
     () => socialService.checkFavoriteStatus('plugin', identifier!),
     { revalidateOnFocus: false },
   );
@@ -98,11 +91,6 @@ const Header = memo<{ inModal?: boolean; mobile?: boolean }>(({ mobile: isMobile
   const isFavorited = favoriteStatus?.isFavorited ?? false;
 
   const handleFavoriteClick = async () => {
-    if (!isAuthenticated) {
-      await signIn();
-      return;
-    }
-
     if (!identifier) return;
 
     setFavoriteLoading(true);

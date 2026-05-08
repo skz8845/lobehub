@@ -4,9 +4,7 @@ import { App } from 'antd';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useMarketAuth } from '@/layout/AuthProvider/MarketAuth';
 import { marketApiService } from '@/services/marketApi';
-import { serverConfigSelectors, useServerConfigStore } from '@/store/serverConfig';
 
 export type AgentStatusAction = 'publish' | 'unpublish' | 'deprecate';
 export type EntityType = 'agent' | 'group';
@@ -18,18 +16,9 @@ interface UseUserDetailOptions {
 export const useUserDetail = ({ onMutate }: UseUserDetailOptions = {}) => {
   const { t } = useTranslation('setting');
   const { message, modal } = App.useApp();
-  const { session } = useMarketAuth();
-  const enableMarketTrustedClient = useServerConfigStore(
-    serverConfigSelectors.enableMarketTrustedClient,
-  );
 
   const handleStatusChange = useCallback(
     async (identifier: string, action: AgentStatusAction, type: EntityType = 'agent') => {
-      if (!enableMarketTrustedClient && !session?.accessToken) {
-        message.error(t('myAgents.errors.notAuthenticated'));
-        return;
-      }
-
       const messageKey = `${type}-status-${action}`;
       const loadingText = t(`myAgents.actions.${action}Loading` as any);
       const successText = t(`myAgents.actions.${action}Success` as any);
@@ -42,7 +31,6 @@ export const useUserDetail = ({ onMutate }: UseUserDetailOptions = {}) => {
       ) {
         try {
           message.loading({ content: loadingText, key: messageKey });
-          marketApiService.setAccessToken(session!.accessToken);
 
           if (type === 'group') {
             switch (action) {
@@ -103,7 +91,7 @@ export const useUserDetail = ({ onMutate }: UseUserDetailOptions = {}) => {
 
       await executeStatusChange(identifier, action, type);
     },
-    [enableMarketTrustedClient, session?.accessToken, message, modal, t, onMutate],
+    [message, modal, t, onMutate],
   );
 
   return {

@@ -1,17 +1,14 @@
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { memo, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 
-import { useMarketAuth, useMarketUserProfile } from '@/layout/AuthProvider/MarketAuth';
-import { type MarketUserProfile } from '@/layout/AuthProvider/MarketAuth/types';
 import { useDiscoverStore } from '@/store/discover';
 
 import NotFound from '../components/NotFound';
 import { UserDetailProvider } from './features/DetailProvider';
 import UserHeader from './features/Header';
 import UserContent from './features/UserContent';
-import { useUserDetail } from './features/useUserDetail';
 import Loading from './loading';
 
 interface UserDetailPageProps {
@@ -21,58 +18,9 @@ interface UserDetailPageProps {
 const UserDetailPage = memo<UserDetailPageProps>(({ mobile }) => {
   const params = useParams<{ slug: string }>();
   const username = decodeURIComponent(params.slug ?? '');
-  const navigate = useNavigate();
-
-  const { checkAndShowClaimableResources, getCurrentUserInfo, isAuthenticated, openProfileSetup } =
-    useMarketAuth();
 
   const useUserProfile = useDiscoverStore((s) => s.useUserProfile);
-  const { data, isLoading, mutate } = useUserProfile({ username });
-
-  // Get current user's profile to check ownership by userName
-  const currentUser = getCurrentUserInfo();
-  const { data: currentUserProfile } = useMarketUserProfile(currentUser?.sub);
-
-  // Check if the current user is viewing their own profile
-  const isOwner =
-    isAuthenticated && !!currentUser && data?.user?.namespace === currentUserProfile?.namespace;
-
-  // Track if we've already checked for claimable resources in this session
-  const hasCheckedClaimable = useRef(false);
-
-  // Check for claimable resources when owner visits their profile
-  useEffect(() => {
-    if (isOwner && !hasCheckedClaimable.current) {
-      hasCheckedClaimable.current = true;
-      // Pass mutate callback to refresh page data after claim
-      checkAndShowClaimableResources(() => {
-        mutate();
-      });
-    }
-  }, [isOwner, checkAndShowClaimableResources, mutate]);
-
-  const { handleStatusChange } = useUserDetail({ onMutate: mutate });
-
-  // Handle profile edit with navigation on userName change
-  const handleEditProfile = useCallback(
-    (onSuccess?: (profile: MarketUserProfile) => void) => {
-      const currentUserName = data?.user?.userName || data?.user?.namespace;
-      openProfileSetup((profile) => {
-        // Call the original onSuccess callback if provided
-        onSuccess?.(profile);
-
-        // Refresh page data to show updated profile
-        mutate();
-
-        // Navigate to new URL if userName changed
-        const newUserName = profile.userName || profile.namespace;
-        if (newUserName && newUserName !== currentUserName) {
-          navigate(`/community/user/${newUserName}`, { replace: true });
-        }
-      });
-    },
-    [data?.user?.userName, data?.user?.namespace, openProfileSetup, navigate, mutate],
-  );
+  const { data, isLoading } = useUserProfile({ username });
 
   const contextConfig = useMemo(() => {
     if (!data || !data.user) return null;
@@ -97,16 +45,14 @@ const UserDetailPage = memo<UserDetailPageProps>(({ mobile }) => {
       forkedAgentGroups: forkedAgentGroups || [],
       forkedAgents: forkedAgents || [],
       groupCount: agentGroups?.length || 0,
-      isOwner,
+      isOwner: false,
       mobile,
-      onEditProfile: handleEditProfile,
-      onStatusChange: isOwner ? handleStatusChange : undefined,
       plugins: plugins || [],
       skills: skills || [],
       totalInstalls,
       user,
     };
-  }, [data, isOwner, mobile, handleEditProfile, handleStatusChange]);
+  }, [data, mobile]);
 
   if (isLoading) return <Loading />;
   if (!contextConfig) return <NotFound />;

@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 import { message } from '@/components/AntdStaticMethods';
 import { useTokenCount } from '@/hooks/useTokenCount';
-import { useMarketAuth } from '@/layout/AuthProvider/MarketAuth';
 import { marketApiService } from '@/services/marketApi';
 import { useAgentStore } from '@/store/agent';
 import { agentChatConfigSelectors, agentSelectors } from '@/store/agent/selectors';
@@ -22,7 +21,6 @@ interface UseMarketPublishOptions {
 export const useMarketPublish = ({ action, onSuccess }: UseMarketPublishOptions) => {
   const { t } = useTranslation('setting');
   const [isPublishing, setIsPublishing] = useState(false);
-  const { isAuthenticated, session } = useMarketAuth();
 
   // Agent data from store
   const meta = useAgentStore(agentSelectors.currentAgentMeta, isEqual);
@@ -41,10 +39,6 @@ export const useMarketPublish = ({ action, onSuccess }: UseMarketPublishOptions)
   const isSubmit = action === 'submit';
 
   const publish = useCallback(async () => {
-    if (!isAuthenticated || !session?.accessToken) {
-      return { success: false };
-    }
-
     const messageKey = isSubmit ? 'submit' : 'upload-version';
     const loadingMessage = isSubmit
       ? t('marketPublish.modal.loading.submit')
@@ -56,7 +50,6 @@ export const useMarketPublish = ({ action, onSuccess }: UseMarketPublishOptions)
     try {
       setIsPublishing(true);
       message.loading({ content: loadingMessage, key: messageKey });
-      marketApiService.setAccessToken(session.accessToken);
 
       if (isSubmit) {
         identifier = generateMarketIdentifier();
@@ -162,7 +155,6 @@ export const useMarketPublish = ({ action, onSuccess }: UseMarketPublishOptions)
     chatConfig?.historyCount,
     chatConfig?.searchMode,
     editorData,
-    isAuthenticated,
     isSubmit,
     language,
     meta?.avatar,
@@ -174,7 +166,6 @@ export const useMarketPublish = ({ action, onSuccess }: UseMarketPublishOptions)
     onSuccess,
     plugins,
     provider,
-    session?.accessToken,
     systemRole,
     tokenUsage,
     t,
