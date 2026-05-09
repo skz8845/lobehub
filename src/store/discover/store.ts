@@ -8,7 +8,6 @@ import { flattenActions } from '../utils/flattenActions';
 import { type ResetableStore, ResetableStoreAction } from '../utils/resetableStore';
 import { type AssistantAction } from './slices/assistant/action';
 import { createAssistantSlice } from './slices/assistant/action';
-import { type GroupAgentAction } from './slices/groupAgent/action';
 import { createGroupAgentSlice } from './slices/groupAgent/action';
 import { type MCPAction } from './slices/mcp';
 import { createMCPSlice } from './slices/mcp';
@@ -29,7 +28,6 @@ import { createUserSlice } from './slices/user';
 
 export type DiscoverStore = MCPAction &
   AssistantAction &
-  GroupAgentAction &
   ProviderAction &
   ModelAction &
   PluginAction &
@@ -40,7 +38,6 @@ export type DiscoverStore = MCPAction &
 
 type DiscoverStoreAction = MCPAction &
   AssistantAction &
-  GroupAgentAction &
   ProviderAction &
   ModelAction &
   PluginAction &

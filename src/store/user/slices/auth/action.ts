@@ -6,11 +6,6 @@ import { type StoreSetter } from '@/store/types';
 
 import { type UserStore } from '../../store';
 
-// Cookie helper function
-const deleteCookie = (name: string) => {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
-};
-
 export interface SSOUserSession {
   email?: string;
   fullName?: string;
@@ -102,10 +97,6 @@ export class UserAuthActionImpl {
     localStorage.removeItem(SSO_USER_TOKEN_KEY);
     localStorage.removeItem(SSO_APP_TOKEN_KEY);
     localStorage.removeItem(SSO_USER_INFO_KEY);
-
-    // Clear SSO tokens from cookie
-    deleteCookie(SSO_USER_TOKEN_KEY);
-    deleteCookie(SSO_APP_TOKEN_KEY);
 
     // Clear state and redirect
     this.#set({

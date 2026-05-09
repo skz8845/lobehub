@@ -7,12 +7,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { SSO_APP_TOKEN_KEY, SSO_USER_INFO_KEY, SSO_USER_TOKEN_KEY } from '@/libs/sso';
 
-// Cookie helper functions
-const setCookie = (name: string, value: string, days: number = 7) => {
-  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
-};
-
 const SSOPage = memo(() => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -53,10 +47,6 @@ const SSOPage = memo(() => {
         // Store tokens in localStorage
         localStorage.setItem(SSO_USER_TOKEN_KEY, userToken!);
         localStorage.setItem(SSO_APP_TOKEN_KEY, appToken!);
-
-        // Store tokens in cookie
-        setCookie(SSO_USER_TOKEN_KEY, userToken!);
-        setCookie(SSO_APP_TOKEN_KEY, appToken!);
 
         // Store user info in localStorage
         if (data.user) {
